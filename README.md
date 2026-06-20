@@ -4,7 +4,7 @@ A sleek, infinite-canvas storyboard tool.
 
 ## Try it
 
-visit `https://loom.codexbat.dev/`. :3
+visit [Loom](https://loom.codexbat.dev/). :3
 
 ## How it works
 - **Canvas**: scroll to zoom (cursor-centered), drag empty space (or hold Space / middle-click) to pan, `F` to zoom-to-fit, `0` to reset.
