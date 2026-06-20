@@ -452,9 +452,14 @@
       selectAccent(target.dataset.accent);
     });
 
-    cancelBtn.addEventListener("click", () => closeImportDialog(null));
+    cancelBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      closeImportDialog(null);
+      closeThemeSwitcher();
+    });
 
-    saveBtn.addEventListener("click", () => {
+    saveBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
       const name = nameInput.value.trim() || "Custom Theme";
       const accent = cssColorToHex(colorInput.value) || "#8b93a6";
       closeImportDialog({ name, accent });
@@ -599,6 +604,12 @@
       }
     }
 
+    // don't just trust the native close to repaint - force it (aka what europeans did to the indians)
+    dialog.removeAttribute("open");
+    dialog.style.display = "none";
+    void dialog.offsetHeight; // force a reflow so the hide takes effect now (that sounds like something an underground tech guy would have to do - "FORCE A REFLOW CITY-WIDE SO THE INTER-NETWORK HIDE MAINFRAME TAKES EFFECT NOW")
+    dialog.style.display = ""; // im so cringe for these comments, im sorry.
+
     const resolve = importDialogResolve;
     importDialogResolve = null;
 
@@ -712,6 +723,14 @@
     });
 
     renderThemeList();
+  }
+
+  function closeThemeSwitcher() {
+    const root = document.querySelector(".loom-theme-root");
+    const fab = root?.querySelector(".loom-theme-fab");
+
+    root?.classList.remove("open");
+    fab?.setAttribute("aria-expanded", "false");
   }
 
   function renderThemeList() {
