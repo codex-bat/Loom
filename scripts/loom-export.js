@@ -113,6 +113,7 @@
     return getCurrentMode() === nextMode;
   }
 
+
   function ensureCaptureStyles() {
     if (document.getElementById("loom-export-capture-styles")) return;
 
@@ -126,13 +127,6 @@
         pointer-events: none;
         overflow: visible;
         background: transparent;
-      }
-
-      .loom-export-capture-bg {
-        position: absolute;
-        inset: 0;
-        pointer-events: none;
-        z-index: 0;
       }
 
       .loom-export-capture-wrap .card-toolbar,
@@ -149,12 +143,6 @@
       .loom-export-capture-wrap .mode-dropdown-menu,
       .loom-export-capture-wrap .export-dropdown-menu {
         display: none !important;
-      }
-
-      .loom-export-capture-wrap .card,
-      .loom-export-capture-wrap .card-header,
-      .loom-export-capture-wrap .card-body {
-        overflow: visible !important;
       }
 
       .loom-export-capture-wrap .card {
@@ -204,18 +192,63 @@
     document.head.appendChild(style);
   }
 
-  function cloneBackgroundFromCanvas(bg, liveCanvas) {
-    if (!liveCanvas) return;
-    const cs = getComputedStyle(liveCanvas);
-    bg.style.backgroundColor = cs.backgroundColor;
-    bg.style.backgroundImage = cs.backgroundImage;
-    bg.style.backgroundSize = cs.backgroundSize;
-    bg.style.backgroundPosition = cs.backgroundPosition;
-    bg.style.backgroundRepeat = cs.backgroundRepeat;
-    bg.style.backgroundAttachment = cs.backgroundAttachment;
-    bg.style.backgroundClip = cs.backgroundClip;
-    bg.style.backgroundOrigin = cs.backgroundOrigin;
-    bg.style.backgroundBlendMode = cs.backgroundBlendMode;
+  function copyCanvasStyles(sourceCanvas, targetCanvas) {
+    if (!sourceCanvas || !targetCanvas) return;
+    const cs = getComputedStyle(sourceCanvas);
+    [
+      "backgroundColor",
+      "backgroundImage",
+      "backgroundSize",
+      "backgroundPosition",
+      "backgroundRepeat",
+      "backgroundAttachment",
+      "backgroundClip",
+      "backgroundOrigin",
+      "backgroundBlendMode",
+      "borderRadius",
+      "boxShadow",
+    ].forEach((prop) => {
+      targetCanvas.style[prop] = cs[prop];
+    });
+  }
+
+  function svgToDataUrl(svg) {
+    const clone = svg.cloneNode(true);
+    clone.setAttribute("xmlns", "http://www.w3.org/2000/svg");
+    clone.setAttribute("xmlns:xlink", "http://www.w3.org/1999/xlink");
+    clone.setAttribute("version", "1.1");
+    const serialized = new XMLSerializer().serializeToString(clone);
+    const bytes = new TextEncoder().encode(serialized);
+    let binary = "";
+    for (let i = 0; i < bytes.length; i += 1) {
+      binary += String.fromCharCode(bytes[i]);
+    }
+    return `data:image/svg+xml;base64,${btoa(binary)}`;
+  }
+
+  function replaceSvgWithImage(svg, width, height) {
+    const img = document.createElement("img");
+    img.alt = "";
+    img.decoding = "async";
+    img.loading = "eager";
+    img.src = svgToDataUrl(svg);
+
+    const cs = getComputedStyle(svg);
+    img.style.position = cs.position || "absolute";
+    img.style.left = cs.left || "0px";
+    img.style.top = cs.top || "0px";
+    img.style.width = cs.width || `${width}px`;
+    img.style.height = cs.height || `${height}px`;
+    img.style.zIndex = cs.zIndex || "0";
+    img.style.pointerEvents = cs.pointerEvents || "none";
+    img.style.overflow = "visible";
+    img.style.display = cs.display || "block";
+    img.style.transform = cs.transform || "none";
+    img.style.transformOrigin = cs.transformOrigin || "0 0";
+    img.style.opacity = cs.opacity || "1";
+
+    svg.replaceWith(img);
+    return img;
   }
 
   function clearTransientClasses(root) {
@@ -229,6 +262,9 @@
           ".dragging",
           ".block-dragging",
           ".active",
+          ".panning",
+          ".selecting",
+          ".space-down",
         ].join(","),
       )
       .forEach((el) => {
@@ -240,14 +276,25 @@
           "dragging",
           "block-dragging",
           "active",
+          "panning",
+          "selecting",
+          "space-down",
         );
       });
   }
 
+  function normalizeSvgForCapture(svg, width, height) {
+    svg.setAttribute("width", String(width));
+    svg.setAttribute("height", String(height));
+    svg.setAttribute("viewBox", `0 0 ${width} ${height}`);
+    svg.setAttribute("overflow", "visible");
+    svg.style.overflow = "visible";
+  }
+
   function buildCaptureClone(bounds) {
-    const liveWorld = document.getElementById("world");
     const liveCanvas = document.getElementById("canvas");
-    if (!liveWorld) return null;
+    const liveWorld = document.getElementById("world");
+    if (!liveCanvas || !liveWorld) return null;
 
     const width = Math.ceil(bounds.maxX - bounds.minX + EXPORT_PADDING * 2);
     const height = Math.ceil(bounds.maxY - bounds.minY + EXPORT_PADDING * 2);
@@ -257,33 +304,49 @@
     wrap.style.width = `${width}px`;
     wrap.style.height = `${height}px`;
 
-    const bg = document.createElement("div");
-    bg.className = "loom-export-capture-bg";
-    cloneBackgroundFromCanvas(bg, liveCanvas);
-    wrap.appendChild(bg);
+    const cloneCanvas = liveCanvas.cloneNode(true);
+    cloneCanvas.id = liveCanvas.id;
+    cloneCanvas.setAttribute("data-export-clone", "true");
+    cloneCanvas.style.position = "absolute";
+    cloneCanvas.style.left = "0";
+    cloneCanvas.style.top = "0";
+    cloneCanvas.style.pointerEvents = "none";
+    cloneCanvas.style.width = `${width}px`;
+    cloneCanvas.style.height = `${height}px`;
+    cloneCanvas.style.overflow = "hidden";
+    cloneCanvas.style.transform = "none";
+    cloneCanvas.style.zIndex = "0";
 
-    const clone = liveWorld.cloneNode(true);
-    clone.removeAttribute("id");
-    clone.style.position = "absolute";
-    clone.style.left = "0";
-    clone.style.top = "0";
-    clone.style.transform = `translate(${Math.round(
+    copyCanvasStyles(liveCanvas, cloneCanvas);
+
+    const cloneWorld = cloneCanvas.querySelector("#world");
+    if (!cloneWorld) return null;
+
+    cloneWorld.id = liveWorld.id;
+    cloneWorld.setAttribute("data-export-clone", "true");
+    cloneWorld.style.position = "absolute";
+    cloneWorld.style.left = "0";
+    cloneWorld.style.top = "0";
+    cloneWorld.style.transform = `translate(${Math.round(
       EXPORT_PADDING - bounds.minX,
-    )}px, ${Math.round(EXPORT_PADDING - bounds.minY)}px)`;
-    clone.style.transformOrigin = "0 0";
-    clone.style.overflow = "visible";
-    clone.style.zIndex = "1";
-    clone.style.pointerEvents = "none";
+    )}px, ${Math.round(EXPORT_PADDING - bounds.minY)}px) scale(1)`;
+    cloneWorld.style.transformOrigin = "0 0";
+    cloneWorld.style.pointerEvents = "none";
 
-    clearTransientClasses(clone);
+    clearTransientClasses(cloneCanvas);
 
-    clone.querySelectorAll("input.card-title").forEach((input) => {
+    cloneCanvas.querySelectorAll("input.card-title").forEach((input) => {
       if (String(input.value || "").trim()) return;
       input.placeholder = "";
       input.value = "";
     });
 
-    wrap.appendChild(clone);
+    cloneCanvas.querySelectorAll("#conn-svg-back, #conn-svg").forEach((svg) => {
+      normalizeSvgForCapture(svg, width, height);
+      replaceSvgWithImage(svg, width, height);
+    });
+
+    wrap.appendChild(cloneCanvas);
     document.body.appendChild(wrap);
     return { wrap, width, height };
   }
