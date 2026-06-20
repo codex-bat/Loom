@@ -1288,6 +1288,103 @@ body.view-mode .frame-line-btn {
 }
 
 /* ============================================================
+   UNDO / REDO (history controls)
+   ----------------------------------------------------------
+   Created by injectUndoRedoButtons() in app.js as plain
+   <button id="btn-undo">/<button id="btn-redo"> siblings
+   inserted right after #btn-new-frame, each containing:
+     <span aria-hidden="true">↩</span><span>Undo</span>
+   No classes are set by JS — everything below targets the
+   IDs/structure directly.
+   ============================================================ */
+
+#btn-undo,
+#btn-redo {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  position: relative;
+  background: transparent;
+  border: 1px solid var(--panel-border);
+  color: var(--ink-dim);
+  font-size: 12.5px;
+  font-weight: 500;
+  padding: 7px 11px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background .12s ease, color .12s ease, border-color .12s ease;
+}
+
+/* fuse into a single segmented pill */
+#btn-undo {
+  margin-left: 10px;
+  border-radius: var(--radius-sm) 0 0 var(--radius-sm);
+}
+
+#btn-redo {
+  margin-left: -1px;
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+}
+
+/* divider separating the pill from New Frame — no extra markup needed */
+#btn-undo::before {
+  content: "";
+  position: absolute;
+  left: -6px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 1px;
+  height: 20px;
+  background: var(--panel-border);
+}
+
+#btn-undo:hover:not(:disabled),
+#btn-redo:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--ink);
+  border-color: rgba(255, 255, 255, 0.13);
+}
+
+#btn-undo:active:not(:disabled),
+#btn-redo:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+#btn-undo:focus-visible,
+#btn-redo:focus-visible {
+  outline: none;
+  border-color: var(--accent);
+  z-index: 1;
+  /* keep the focus border above the merged neighbor */
+}
+
+#btn-undo span[aria-hidden="true"],
+#btn-redo span[aria-hidden="true"] {
+  font-size: 13px;
+  line-height: 1;
+}
+
+#btn-undo:disabled,
+#btn-redo:disabled {
+  opacity: 0.35;
+  pointer-events: none;
+}
+
+/* collapse to icon-only at the same breakpoint #btn-new-frame collapses at */
+@media (max-width: 880px) {
+
+  #btn-undo span:last-child,
+  #btn-redo span:last-child {
+    display: none;
+  }
+
+  #btn-undo,
+  #btn-redo {
+    padding: 7px 9px;
+  }
+}
+
+/* ============================================================
    SVG CONNECTION STRINGS
    ============================================================ */
 #conn-svg {
@@ -1843,7 +1940,7 @@ body:not(.view-mode) .loom-md-preview {
   gap: 6px;
 }
 
-.loom-theme-import-field > span {
+.loom-theme-import-field>span {
   font-size: 10.5px;
   text-transform: uppercase;
   letter-spacing: 1px;
@@ -1993,6 +2090,7 @@ body:not(.view-mode) .loom-md-preview {
 }
 
 @media (prefers-reduced-motion: reduce) {
+
   .loom-theme-fab,
   .loom-theme-fab svg,
   .loom-theme-panel,
@@ -2001,6 +2099,234 @@ body:not(.view-mode) .loom-md-preview {
   .loom-theme-import-btn {
     transition: none !important;
   }
+}
+
+/* ============================================================
+   Loom UI — shared structural styles
+   ------------------------------------------------------------
+   This file exists so that nothing in scripts/app.js or
+   scripts/loom-export.js has to inject a <style> tag at
+   runtime. Runtime-injected styles can't be reached by a theme
+   stylesheet, which defeats the whole point of having themes.
+   Everything here is written against the same CSS custom
+   properties your theme files already define (--accent, --ink,
+   --ink-faint, --font-display, ...) with sensible fallbacks, so
+   a new theme only needs to redefine those variables — it never
+   needs to know this file exists.
+   ============================================================ */
+
+/* ---------------------------------------------------------
+   Export dropdown (topbar)
+   Mirrors the existing .mode-dropdown component so the two
+   feel like siblings.
+   --------------------------------------------------------- */
+.export-dropdown {
+  position: relative;
+}
+
+.export-dropdown-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.export-dropdown-btn .dropdown-chevron {
+  opacity: 0.6;
+  transition: transform 0.15s ease;
+}
+
+.export-dropdown-btn[aria-expanded="true"] .dropdown-chevron {
+  transform: rotate(180deg);
+}
+
+.export-dropdown-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 80;
+  min-width: 230px;
+  margin: 0;
+  padding: 6px;
+  list-style: none;
+  background: var(--panel, var(--surface, #1c1f24));
+  border: 1px solid var(--border, rgba(255, 255, 255, 0.1));
+  border-radius: 10px;
+  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.35);
+  opacity: 0;
+  transform: translateY(-4px);
+  pointer-events: none;
+  transition: opacity 0.12s ease, transform 0.12s ease;
+}
+
+.export-dropdown-menu.open {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+.export-dropdown-option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: 7px;
+  cursor: pointer;
+  color: var(--ink, #e8e8ea);
+}
+
+.export-dropdown-option:hover,
+.export-dropdown-option:focus-visible {
+  background: color-mix(in srgb, var(--accent, #6fe3c8) 16%, transparent);
+  outline: none;
+}
+
+.export-option-icon {
+  flex: 0 0 auto;
+  width: 20px;
+  text-align: center;
+  font-family: var(--font-mono, "JetBrains Mono", monospace);
+  font-size: 12px;
+  opacity: 0.7;
+}
+
+.export-option-text {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.export-option-label {
+  font-family: var(--font-display, "Space Grotesk", sans-serif);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.export-option-sub {
+  font-size: 11px;
+  color: var(--ink-faint, rgba(255, 255, 255, 0.5));
+}
+
+/* ---------------------------------------------------------
+   Canvas / frame interaction states
+   (previously injected at runtime by app.js → injectInteractionStyles)
+   --------------------------------------------------------- */
+#canvas.panning {
+  cursor: grabbing;
+}
+
+#canvas.dragging-frame {
+  cursor: grabbing;
+}
+
+#canvas.dragging-frame .card,
+#canvas.dragging-frame .card-header,
+#canvas.dragging-frame .card-body {
+  cursor: grabbing;
+}
+
+body.panel-resizing,
+body.panel-resizing * {
+  cursor: col-resize !important;
+  user-select: none !important;
+}
+
+#left-panel,
+#right-panel {
+  position: relative;
+}
+
+.panel-resize-handle {
+  position: absolute;
+  top: 0;
+  width: 10px;
+  height: 100%;
+  z-index: 40;
+  background: transparent;
+  cursor: col-resize;
+  touch-action: none;
+}
+
+.panel-resize-handle::before {
+  content: "";
+  position: absolute;
+  top: 10px;
+  bottom: 10px;
+  left: 50%;
+  width: 1px;
+  transform: translateX(-50%);
+  background: var(--border, rgba(255, 255, 255, 0.12));
+  opacity: 0;
+  transition: opacity 0.12s ease;
+}
+
+.panel-resize-handle:hover::before,
+.panel-resize-handle.active::before {
+  opacity: 1;
+}
+
+#left-panel .panel-resize-handle {
+  right: -5px;
+}
+
+#right-panel .panel-resize-handle {
+  left: -5px;
+}
+
+.panel-resize-handle.hidden {
+  display: none;
+}
+
+#btn-undo:disabled,
+#btn-redo:disabled {
+  opacity: 0.35;
+  pointer-events: none;
+}
+
+/* ---------------------------------------------------------
+   Storyboard PNG export capture
+   (previously injected at runtime by loom-export.js → ensureCaptureStyles)
+   The exporter clones #world into a `.loom-export-capture-wrap`
+   off-screen, then rasterizes it with html2canvas. These rules
+   only ever apply inside that throwaway clone.
+   --------------------------------------------------------- */
+.loom-export-capture-wrap {
+  position: fixed;
+  left: -99999px;
+  top: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.loom-export-capture-wrap .card-toolbar,
+.loom-export-capture-wrap .card-pin-btn,
+.loom-export-capture-wrap .resize-handle,
+.loom-export-capture-wrap .block-controls,
+.loom-export-capture-wrap .block-link-input,
+.loom-export-capture-wrap .conn-hit,
+.loom-export-capture-wrap .panel-resize-handle {
+  display: none !important;
+}
+
+.loom-export-capture-wrap .card {
+  cursor: default !important;
+}
+
+.loom-export-capture-wrap .card-title-static {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  font-family: var(--font-display, "Space Grotesk", sans-serif);
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--ink, #e8e8ea);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.loom-export-capture-wrap .card-title-static.placeholder {
+  font-weight: 500;
+  color: var(--ink-faint, rgba(255, 255, 255, 0.5));
 }
 
 /* ============================================================
