@@ -20,6 +20,11 @@
   const PANEL_MIN_CANVAS_WIDTH = 420;
   const PANEL_MOBILE_BREAKPOINT = 680;
 
+  // Ctrl+Drag frame-alignment snapping
+  const SNAP_PX = 8; // screen-space snap threshold (converted to world units by zoom)
+  const ACCENT_VAR = "var(--accent, #6fe3c8)"; // root accent, theme-reactive
+  const WORLD_ORIGIN = { x: 0, y: 0 };
+
   const DEFAULT_STATE = () => ({
     cards: [],
     connections: [],
@@ -34,6 +39,12 @@
   let selectedIds = new Set();
   let pendingImageCardId = null;
   let mode = "edit";
+
+  // ── History (undo/redo) ──────────────────────────────
+  const MAX_HISTORY = 60;
+  let historyStack = [];
+  let historyIndex = -1;
+  let historyDebounceTimer = null;
 
   /* ====================================================
      DOM REFS
@@ -222,6 +233,11 @@
       .panel-resize-handle.hidden {
         display: none;
       }
+      #btn-undo:disabled,
+      #btn-redo:disabled {
+        opacity: 0.35;
+        pointer-events: none;
+      }
     `;
     document.head.appendChild(style);
   }
@@ -256,15 +272,6 @@
 
   /* ====================================================
      MARKDOWN PREVIEW SYNC HOOKS
-     ----------------------------------------------------
-     loom-markdown.js binds itself to .card-title inputs,
-     #insp-title, #insp-notes, and .block-text elements via
-     a MutationObserver, which catches newly-created DOM.
-     But when we set a field's .value/.textContent directly
-     from JS (no native input/change event fires), its
-     rendered preview can go stale until something else
-     happens to trigger a resync. These two small helpers
-     make that resync immediate and explicit.
      ==================================================== */
   function bindMarkdownFields() {
     if (
@@ -325,6 +332,160 @@
   }
 
   /* ====================================================
+     UNDO / REDO
+     ----------------------------------------------------
+     Snapshot-based history. Each call to pushHistory()
+     captures the complete current state (minus view/layout,
+     which are kept as-is on restore so the camera doesn't
+     jump). Debounced variants are used for rapid-fire text
+     input so every keystroke doesn't create a history entry.
+
+     Keyboard shortcuts:
+       Ctrl+Z          – undo
+       Ctrl+Y          – redo
+       Ctrl+Shift+Z    – redo (alternate)
+     ==================================================== */
+  function cloneStateForHistory() {
+    return JSON.parse(JSON.stringify(state));
+  }
+
+  function pushHistory() {
+    // Flush and cancel any pending debounced push
+    clearTimeout(historyDebounceTimer);
+    historyDebounceTimer = null;
+
+    // Discard future states (redo branch)
+    historyStack = historyStack.slice(0, historyIndex + 1);
+
+    // Snapshot current state
+    historyStack.push(cloneStateForHistory());
+
+    // Enforce size limit (remove oldest, keep index pointing at newest)
+    if (historyStack.length > MAX_HISTORY) {
+      historyStack.shift();
+      // historyIndex stays the same — we removed from the front, added to the back
+    } else {
+      historyIndex = historyStack.length - 1;
+    }
+
+    syncUndoRedoButtons();
+  }
+
+  function pushHistoryDebounced() {
+    clearTimeout(historyDebounceTimer);
+    historyDebounceTimer = setTimeout(() => {
+      historyDebounceTimer = null;
+      pushHistory();
+    }, 700);
+  }
+
+  /**
+   * If a debounced push is pending, flush it immediately so that a
+   * subsequent destructive action (delete, clear, etc.) is recorded
+   * as a SEPARATE undo step rather than merging into the next push.
+   */
+  function flushHistoryDebounce() {
+    if (historyDebounceTimer !== null) {
+      clearTimeout(historyDebounceTimer);
+      historyDebounceTimer = null;
+      pushHistory();
+    }
+  }
+
+  function clearHistory() {
+    clearTimeout(historyDebounceTimer);
+    historyDebounceTimer = null;
+    historyStack = [];
+    historyIndex = -1;
+    syncUndoRedoButtons();
+  }
+
+  function syncUndoRedoButtons() {
+    const undoBtn = document.getElementById("btn-undo");
+    const redoBtn = document.getElementById("btn-redo");
+    const isView = mode === "view";
+    if (undoBtn) undoBtn.disabled = isView || historyIndex <= 0;
+    if (redoBtn) redoBtn.disabled = isView || historyIndex >= historyStack.length - 1;
+  }
+
+  function restoreFromHistory() {
+    const snap = historyStack[historyIndex];
+    if (!snap) return;
+
+    // Preserve camera and panel layout across undo/redo
+    const currentView = JSON.parse(JSON.stringify(state.view));
+    const currentLayout = JSON.parse(JSON.stringify(state.layout));
+
+    state = JSON.parse(JSON.stringify(snap));
+    state.view = currentView;
+    state.layout = currentLayout;
+    state.cards = state.cards.map(normalizeCard);
+    state.connections = state.connections.map(normalizeConnection);
+
+    clearSelection();
+    applyProjectName();
+    applyView();
+    renderAll();
+    save();
+    syncUndoRedoButtons();
+  }
+
+  function undo() {
+    if (mode === "view") return;
+    // Flush any pending text edit so it becomes its own history entry
+    flushHistoryDebounce();
+    if (historyIndex <= 0) {
+      toast("Nothing to undo");
+      return;
+    }
+    historyIndex--;
+    restoreFromHistory();
+    toast("Undone");
+  }
+
+  function redo() {
+    if (mode === "view") return;
+    if (historyIndex >= historyStack.length - 1) {
+      toast("Nothing to redo");
+      return;
+    }
+    historyIndex++;
+    restoreFromHistory();
+    toast("Redone");
+  }
+
+  /**
+   * Inject Undo / Redo buttons into the top bar, right after
+   * #btn-new-frame. Safe to call multiple times (no-op if already done).
+   */
+  function injectUndoRedoButtons() {
+    if (document.getElementById("btn-undo")) return;
+    const newFrameBtn = document.getElementById("btn-new-frame");
+    if (!newFrameBtn) return;
+
+    const undoBtn = document.createElement("button");
+    undoBtn.id = "btn-undo";
+    undoBtn.type = "button";
+    undoBtn.setAttribute("aria-label", "Undo");
+    undoBtn.dataset.tooltip = "Undo (Ctrl+Z)";
+    undoBtn.innerHTML = `<span aria-hidden="true">↩</span><span>Undo</span>`;
+    undoBtn.disabled = true;
+    undoBtn.addEventListener("click", undo);
+
+    const redoBtn = document.createElement("button");
+    redoBtn.id = "btn-redo";
+    redoBtn.type = "button";
+    redoBtn.setAttribute("aria-label", "Redo");
+    redoBtn.dataset.tooltip = "Redo (Ctrl+Y / Ctrl+Shift+Z)";
+    redoBtn.innerHTML = `<span aria-hidden="true">↪</span><span>Redo</span>`;
+    redoBtn.disabled = true;
+    redoBtn.addEventListener("click", redo);
+
+    // Insert both buttons immediately after the New Frame button
+    newFrameBtn.after(undoBtn, redoBtn);
+  }
+
+  /* ====================================================
      CUSTOM TOOLTIP
      ==================================================== */
   let tipTimer = null;
@@ -359,6 +520,36 @@
       },
       true,
     );
+  }
+
+  /* ====================================================
+     CONTROL TOOLTIPS
+     ----------------------------------------------------
+     Ctrl+Drag has two distinct behaviours depending on what
+     you're dragging:
+       • Canvas background → pan the viewport
+       • A frame           → drag with snap-alignment to other
+                             frames' edges/centres and the
+                             world origin
+
+     Space is no longer used for panning (legacy label fixed).
+     Undo/Redo shortcuts are also surfaced here so the canvas
+     tooltip acts as a quick-reference for all key controls.
+
+     NOTE: If your app has a separate HTML "Controls" modal or
+     help panel that lists keyboard shortcuts, update it to
+     match this text — particularly replacing any "Space + Drag"
+     labels with "Ctrl + Drag canvas" for panning.
+     ==================================================== */
+  function applyControlTooltips() {
+    if ($canvas) {
+      $canvas.dataset.tooltip =
+        "Ctrl + Drag canvas to pan"
+        + " \u00b7 Ctrl + Drag a frame to snap-align its edges"
+        + " \u00b7 Scroll to zoom"
+        + " \u00b7 Drag canvas to box-select"
+        + " \u00b7 Ctrl+Z to undo \u00b7 Ctrl+Y to redo";
+    }
   }
 
   /* ====================================================
@@ -410,6 +601,8 @@
     renderWorld();
     renderFrameList();
     renderInspector();
+    // Undo/redo is locked in view mode
+    syncUndoRedoButtons();
     try {
       localStorage.setItem(MODE_STORAGE_KEY, mode);
     } catch {
@@ -630,12 +823,6 @@
 
   /* ====================================================
      SVG LAYER
-     ----------------------------------------------------
-     Two stacked SVG layers live inside #world:
-       $svgBack  (z-index -1) — strings that render BEHIND cards
-       $svg      (z-index 50) — strings that render IN FRONT of cards
-     Each connection carries its own `layer` ("front"/"back") so an
-     individual string can be pushed behind or in front of frames.
      ==================================================== */
   function buildConnDefs(suffix) {
     const defs = svgEl("defs");
@@ -656,6 +843,40 @@
     return defs;
   }
 
+  function buildOriginOrb() {
+    const g = svgEl("g");
+    g.classList.add("world-origin-orb");
+    g.style.pointerEvents = "none";
+    g.appendChild(
+      svgEl("circle", {
+        cx: WORLD_ORIGIN.x,
+        cy: WORLD_ORIGIN.y,
+        r: 22,
+        fill: ACCENT_VAR,
+        opacity: "0.06",
+      }),
+    );
+    g.appendChild(
+      svgEl("circle", {
+        cx: WORLD_ORIGIN.x,
+        cy: WORLD_ORIGIN.y,
+        r: 10,
+        fill: ACCENT_VAR,
+        opacity: "0.14",
+      }),
+    );
+    g.appendChild(
+      svgEl("circle", {
+        cx: WORLD_ORIGIN.x,
+        cy: WORLD_ORIGIN.y,
+        r: 3.5,
+        fill: ACCENT_VAR,
+        opacity: "0.55",
+      }),
+    );
+    return g;
+  }
+
   function initSVG() {
     $svgBack = svgEl("svg");
     $svgBack.id = "conn-svg-back";
@@ -666,6 +887,7 @@
     $svgBack.style.pointerEvents = "none";
     $svgBack.style.zIndex = "-1";
     $svgBack.appendChild(buildConnDefs("-back"));
+    $svgBack.appendChild(buildOriginOrb());
 
     $svg = svgEl("svg");
     $svg.id = "conn-svg";
@@ -719,9 +941,11 @@
   }
 
   function deleteConnection(id) {
+    flushHistoryDebounce();
     state.connections = state.connections.filter((c) => c.id !== id);
     renderFrameList();
     renderConnections();
+    pushHistory();
     save();
     toast("Connection removed");
   }
@@ -807,6 +1031,110 @@
     });
     shimmer.classList.add("conn-shimmer");
     return { hit, shadow, thread, shimmer };
+  }
+
+  /* ====================================================
+     FRAME SNAPPING (Ctrl + Drag a frame)
+     ==================================================== */
+  function collectSnapLines(excludeIds) {
+    const vLines = [];
+    const hLines = [];
+    state.cards.forEach((c) => {
+      if (excludeIds.has(c.id)) return;
+      vLines.push(c.x, c.x + c.w / 2, c.x + c.w);
+      hLines.push(c.y, c.y + c.h / 2, c.y + c.h);
+    });
+    vLines.push(WORLD_ORIGIN.x);
+    hLines.push(WORLD_ORIGIN.y);
+    return { vLines, hLines };
+  }
+
+  function computeCardSnap(freeX, freeY, w, h, vLines, hLines, thresholdWorld) {
+    const candX = [freeX, freeX + w / 2, freeX + w];
+    const candY = [freeY, freeY + h / 2, freeY + h];
+
+    let bestDX = null;
+    let bestVLine = null;
+    candX.forEach((cx) => {
+      vLines.forEach((lx) => {
+        const d = lx - cx;
+        if (
+          Math.abs(d) <= thresholdWorld &&
+          (bestDX === null || Math.abs(d) < Math.abs(bestDX))
+        ) {
+          bestDX = d;
+          bestVLine = lx;
+        }
+      });
+    });
+
+    let bestDY = null;
+    let bestHLine = null;
+    candY.forEach((cy) => {
+      hLines.forEach((ly) => {
+        const d = ly - cy;
+        if (
+          Math.abs(d) <= thresholdWorld &&
+          (bestDY === null || Math.abs(d) < Math.abs(bestDY))
+        ) {
+          bestDY = d;
+          bestHLine = ly;
+        }
+      });
+    });
+
+    return {
+      dx: bestDX || 0,
+      dy: bestDY || 0,
+      vLine: bestVLine,
+      hLine: bestHLine,
+    };
+  }
+
+  function drawSnapGuides(vLine, hLine) {
+    if (!$svg) return;
+    if (vLine === null && hLine === null) return;
+
+    const rect = $canvas.getBoundingClientRect();
+    const tl = screenToWorld(rect.left, rect.top);
+    const br = screenToWorld(rect.right, rect.bottom);
+    const sw = Math.max(1, 1.4 / state.view.scale);
+    const dash = `${4 / state.view.scale} ${4 / state.view.scale}`;
+
+    const g = svgEl("g");
+    g.classList.add("snap-guides");
+    g.style.pointerEvents = "none";
+
+    if (vLine !== null) {
+      g.appendChild(
+        svgEl("line", {
+          x1: vLine,
+          y1: tl.y - 4000,
+          x2: vLine,
+          y2: br.y + 4000,
+          stroke: ACCENT_VAR,
+          "stroke-width": sw,
+          "stroke-dasharray": dash,
+          opacity: "0.85",
+        }),
+      );
+    }
+    if (hLine !== null) {
+      g.appendChild(
+        svgEl("line", {
+          x1: tl.x - 4000,
+          y1: hLine,
+          x2: br.x + 4000,
+          y2: hLine,
+          stroke: ACCENT_VAR,
+          "stroke-width": sw,
+          "stroke-dasharray": dash,
+          opacity: "0.85",
+        }),
+      );
+    }
+
+    $svg.appendChild(g);
   }
 
   /* ====================================================
@@ -910,6 +1238,7 @@
         };
         state.connections.push(linkedConn);
         renderFrameList();
+        pushHistory();
         save();
       }
     } else if (connDrag && connDrag.hoverInvalid) {
@@ -1123,7 +1452,11 @@
     });
     if ($svgBack) {
       Array.from($svgBack.children).forEach((child) => {
-        if (child.tagName !== "defs") child.remove();
+        if (
+          child.tagName !== "defs" &&
+          !child.classList.contains("world-origin-orb")
+        )
+          child.remove();
       });
     }
     state.connections.forEach((conn) => {
@@ -1140,9 +1473,6 @@
 
   /* ====================================================
      CONNECTION CONTEXT MENU
-     ----------------------------------------------------
-     Right-click on a string: push it behind/in front of
-     frames, or apply its current stacking to every string.
      ==================================================== */
   function ensureConnContextMenu() {
     if ($connContextMenu) return $connContextMenu;
@@ -1185,6 +1515,7 @@
     if (!conn) return;
     conn.layer = layer === "back" ? "back" : "front";
     renderConnections();
+    pushHistory();
     save();
   }
 
@@ -1194,6 +1525,7 @@
       c.layer = normalized;
     });
     renderConnections();
+    pushHistory();
     save();
     toast(
       normalized === "back"
@@ -1332,10 +1664,32 @@
     applyView();
   }
 
+  /**
+   * Pure bounding-box calculation over all cards in world space.
+   * Shared by zoomToFit() and the storyboard image exporter
+   * (see scripts/loom-export.js) so both "fit everything" features
+   * always agree on what the full extent of the board is.
+   * Returns null when the board is empty.
+   */
+  function getCardsBounds() {
+    if (state.cards.length === 0) return null;
+    let minX = Infinity,
+      minY = Infinity,
+      maxX = -Infinity,
+      maxY = -Infinity;
+    state.cards.forEach((c) => {
+      minX = Math.min(minX, c.x);
+      minY = Math.min(minY, c.y);
+      maxX = Math.max(maxX, c.x + c.w);
+      maxY = Math.max(maxY, c.y + c.h);
+    });
+    return { minX, minY, maxX, maxY };
+  }
+
   let panCtx = null;
   function startPanning(e, captureEl) {
     if (mode === "view" && e.button === 0) {
-      // still allow ctrl/middle pan in view mode; plain left drag remains no-op unless empty canvas selection.
+      // still allow ctrl/middle pan in view mode
     }
     setFrameDragActive(false);
     panCtx = {
@@ -1382,6 +1736,7 @@
       y: e.clientY - rect.top,
     };
   }
+
   /* ====================================================
      MARQUEE SELECTION
      ==================================================== */
@@ -1545,6 +1900,23 @@
 
   window.addEventListener("keydown", (e) => {
     if (isEditableTarget(document.activeElement)) return;
+
+    // ── Undo / Redo ──────────────────────────────────────
+    if ((e.ctrlKey || e.metaKey) && e.key === "z" && !e.shiftKey) {
+      e.preventDefault();
+      undo();
+      return;
+    }
+    if (
+      (e.ctrlKey || e.metaKey) &&
+      (e.key === "y" || (e.key === "z" && e.shiftKey) || (e.key === "Z" && e.shiftKey))
+    ) {
+      e.preventDefault();
+      redo();
+      return;
+    }
+
+    // ── Existing shortcuts ───────────────────────────────
     if (mode !== "view" && (e.key === "n" || e.key === "N")) addCard();
     else if (e.key === "f" || e.key === "F") zoomToFit();
     else if (e.key === "0") centerView();
@@ -1619,6 +1991,7 @@
     state.nextNum++;
     renderAll();
     selectCard(card.id);
+    pushHistory();
     save();
     const titleEl = $world.querySelector(
       `[data-card-id="${card.id}"] .card-title`,
@@ -1628,24 +2001,28 @@
 
   function deleteCard(id) {
     if (mode === "view") return;
+    flushHistoryDebounce();
     state.cards = state.cards.filter((c) => c.id !== id);
     state.connections = state.connections.filter(
       (c) => c.fromId !== id && c.toId !== id,
     );
     if (selectedId === id) clearSelection();
     renderAll();
+    pushHistory();
     save();
   }
 
   function deleteSelectedCards() {
     if (mode === "view") return;
     if (selectedIds.size === 0) return;
+    flushHistoryDebounce();
     state.cards = state.cards.filter((c) => !selectedIds.has(c.id));
     state.connections = state.connections.filter(
       (c) => !selectedIds.has(c.fromId) && !selectedIds.has(c.toId),
     );
     clearSelection();
     renderAll();
+    pushHistory();
     save();
   }
 
@@ -1685,6 +2062,7 @@
     const numEl = document.createElement("span");
     numEl.className = "card-num";
     numEl.textContent = String(num).padStart(2, "0");
+    numEl.dataset.tooltip = "Drag to move \u00b7 Ctrl + Drag to snap-align edges";
 
     const titleInput = document.createElement("input");
     titleInput.className = "card-title";
@@ -1702,6 +2080,7 @@
         syncMarkdownPreviews();
       }
       renderFrameListSoft();
+      pushHistoryDebounced();
       save();
     });
 
@@ -1752,10 +2131,11 @@
 
     const handle = document.createElement("div");
     handle.className = "resize-handle";
+    handle.dataset.tooltip = "Drag to resize";
     el.appendChild(handle);
 
     const beginCardMotion = (e) => {
-      if (e.ctrlKey || e.button === 1) {
+      if (e.button === 1) {
         startPanning(e, el);
         return;
       }
@@ -1824,6 +2204,7 @@
       textEl.addEventListener("input", () => {
         if (mode === "view") return;
         block.data.text = textEl.textContent;
+        pushHistoryDebounced();
         save();
       });
       wrap.appendChild(textEl);
@@ -1854,6 +2235,7 @@
         block.type = "link";
         block.data = { url: val, label: hostnameOf(val) };
         renderWorld();
+        pushHistory();
         save();
       };
       input.addEventListener("pointerdown", (e) => e.stopPropagation());
@@ -1929,6 +2311,7 @@
     card.blocks.push(block);
     renderWorld();
     selectCard(card.id);
+    pushHistory();
     save();
     if (type === "link-edit") {
       const inputEl = $world.querySelector(
@@ -1940,9 +2323,11 @@
 
   function removeBlock(card, block) {
     if (mode === "view") return;
+    flushHistoryDebounce();
     card.blocks = card.blocks.filter((b) => b.id !== block.id);
     renderWorld();
     selectCard(card.id);
+    pushHistory();
     save();
   }
 
@@ -1962,6 +2347,7 @@
       });
       renderWorld();
       selectCard(card.id);
+      pushHistory();
       save();
     };
     reader.onerror = () => toast("Could not read that image");
@@ -1970,6 +2356,9 @@
 
   /* ====================================================
      DRAG CARD / GROUP DRAG / RESIZE / FRAME-ELEMENTS
+     ----------------------------------------------------
+     hasMoved guards on each drag context prevent a plain
+     click-without-drag from pushing a no-op history entry.
      ==================================================== */
   let dragCtx = null;
   let groupDragCtx = null;
@@ -1995,6 +2384,7 @@
       startY: card.y,
       pointerId: e.pointerId,
       active: true,
+      hasMoved: false,
     };
     try {
       el.setPointerCapture(e.pointerId);
@@ -2010,10 +2400,34 @@
     if (!dragCtx?.active) return;
     const card = getCard(dragCtx.id);
     if (!card) return;
+    dragCtx.hasMoved = true;
     const dx = (e.clientX - dragCtx.startScreenX) / state.view.scale;
     const dy = (e.clientY - dragCtx.startScreenY) / state.view.scale;
-    card.x = Math.round(dragCtx.startX + dx);
-    card.y = Math.round(dragCtx.startY + dy);
+    let nx = Math.round(dragCtx.startX + dx);
+    let ny = Math.round(dragCtx.startY + dy);
+
+    let snapV = null;
+    let snapH = null;
+    if (e.ctrlKey) {
+      const { vLines, hLines } = collectSnapLines(new Set([card.id]));
+      const thresholdWorld = SNAP_PX / state.view.scale;
+      const snap = computeCardSnap(
+        nx,
+        ny,
+        card.w,
+        card.h,
+        vLines,
+        hLines,
+        thresholdWorld,
+      );
+      nx += snap.dx;
+      ny += snap.dy;
+      snapV = snap.vLine;
+      snapH = snap.hLine;
+    }
+
+    card.x = nx;
+    card.y = ny;
     dragCtx.el.style.left = card.x + "px";
     dragCtx.el.style.top = card.y + "px";
     if (card.id === selectedId) {
@@ -2021,13 +2435,17 @@
       $inspY.value = card.y;
     }
     renderConnections();
+    if (e.ctrlKey) drawSnapGuides(snapV, snapH);
   }
 
   function onDragCardUp() {
     window.removeEventListener("pointermove", onDragCardMove);
+    const moved = dragCtx?.hasMoved;
     if (dragCtx) dragCtx.active = false;
     dragCtx = null;
     setFrameDragActive(false);
+    renderConnections(); // clears any leftover snap-guide lines
+    if (moved) pushHistory();
     save();
   }
 
@@ -2039,9 +2457,11 @@
     groupDragCtx = {
       active: true,
       pointerId: e.pointerId,
+      anchorId: card.id,
       startScreenX: e.clientX,
       startScreenY: e.clientY,
       cards: new Map(),
+      hasMoved: false,
     };
     selectedIds.forEach((id) => {
       const c = getCard(id);
@@ -2061,13 +2481,44 @@
 
   function onGroupDragMove(e) {
     if (!groupDragCtx?.active) return;
+    groupDragCtx.hasMoved = true;
     const dx = (e.clientX - groupDragCtx.startScreenX) / state.view.scale;
     const dy = (e.clientY - groupDragCtx.startScreenY) / state.view.scale;
+
+    let snapDx = 0;
+    let snapDy = 0;
+    let snapV = null;
+    let snapH = null;
+
+    if (e.ctrlKey) {
+      const anchorStart = groupDragCtx.cards.get(groupDragCtx.anchorId);
+      if (anchorStart && anchorStart.card) {
+        const freeX = Math.round(anchorStart.x + dx);
+        const freeY = Math.round(anchorStart.y + dy);
+        const excludeIds = new Set(groupDragCtx.cards.keys());
+        const { vLines, hLines } = collectSnapLines(excludeIds);
+        const thresholdWorld = SNAP_PX / state.view.scale;
+        const snap = computeCardSnap(
+          freeX,
+          freeY,
+          anchorStart.card.w,
+          anchorStart.card.h,
+          vLines,
+          hLines,
+          thresholdWorld,
+        );
+        snapDx = snap.dx;
+        snapDy = snap.dy;
+        snapV = snap.vLine;
+        snapH = snap.hLine;
+      }
+    }
+
     groupDragCtx.cards.forEach((start, id) => {
       const card = start.card;
       if (!card) return;
-      card.x = Math.round(start.x + dx);
-      card.y = Math.round(start.y + dy);
+      card.x = Math.round(start.x + dx + snapDx);
+      card.y = Math.round(start.y + dy + snapDy);
       start.node.style.left = card.x + "px";
       start.node.style.top = card.y + "px";
       if (id === selectedId) {
@@ -2076,13 +2527,17 @@
       }
     });
     renderConnections();
+    if (e.ctrlKey) drawSnapGuides(snapV, snapH);
   }
 
   function onGroupDragUp() {
     window.removeEventListener("pointermove", onGroupDragMove);
+    const moved = groupDragCtx?.hasMoved;
     if (groupDragCtx) groupDragCtx.active = false;
     groupDragCtx = null;
     setFrameDragActive(false);
+    renderConnections(); // clears any leftover snap-guide lines
+    if (moved) pushHistory();
     save();
   }
 
@@ -2100,6 +2555,7 @@
       startW: card.w,
       startH: card.h,
       active: true,
+      hasMoved: false,
     };
     try {
       el.setPointerCapture(e.pointerId);
@@ -2115,6 +2571,7 @@
     if (!resizeCtx?.active) return;
     const card = getCard(resizeCtx.id);
     if (!card) return;
+    resizeCtx.hasMoved = true;
     const dx = (e.clientX - resizeCtx.startScreenX) / state.view.scale;
     const dy = (e.clientY - resizeCtx.startScreenY) / state.view.scale;
     card.w = Math.max(180, Math.round(resizeCtx.startW + dx));
@@ -2130,9 +2587,11 @@
 
   function onResizeUp() {
     window.removeEventListener("pointermove", onResizeMove);
+    const moved = resizeCtx?.hasMoved;
     if (resizeCtx) resizeCtx.active = false;
     resizeCtx = null;
     setFrameDragActive(false);
+    if (moved) pushHistory();
     save();
   }
 
@@ -2146,7 +2605,7 @@
     if (!wrap || !body) return;
 
     wrap.classList.add("block-dragging");
-    blockDragCtx = { active: true, card, wrap, body };
+    blockDragCtx = { active: true, card, wrap, body, hasMoved: false };
 
     try {
       handle.setPointerCapture(e.pointerId);
@@ -2161,6 +2620,7 @@
 
   function onBlockDragMove(e) {
     if (!blockDragCtx?.active) return;
+    blockDragCtx.hasMoved = true;
     const { wrap, body } = blockDragCtx;
 
     const siblings = Array.from(body.children).filter(
@@ -2192,6 +2652,7 @@
   function onBlockDragUp() {
     if (!blockDragCtx?.active) return;
     const { card, wrap, body } = blockDragCtx;
+    const moved = blockDragCtx.hasMoved;
     window.removeEventListener("pointermove", onBlockDragMove);
     wrap.classList.remove("block-dragging");
 
@@ -2204,6 +2665,7 @@
     );
 
     blockDragCtx = null;
+    if (moved) pushHistory();
     save();
   }
 
@@ -2325,6 +2787,7 @@
         renderInspector();
         renderWorld();
         renderFrameList();
+        pushHistory();
         save();
       });
       $inspSwatches.appendChild(sw);
@@ -2338,6 +2801,7 @@
     card.frameLine = normalizeFrameLine(value);
     syncFrameLineSelector(card.frameLine);
     renderWorld();
+    pushHistory();
     save();
   }
 
@@ -2456,6 +2920,7 @@
       syncMarkdownPreviews();
     }
     renderFrameListSoft();
+    pushHistoryDebounced();
     save();
   });
 
@@ -2464,6 +2929,7 @@
     const card = getCard(selectedId);
     if (!card) return;
     card.notes = $inspNotes.value;
+    pushHistoryDebounced();
     save();
   });
 
@@ -2493,6 +2959,7 @@
         el.style.height = card.h + "px";
       }
       renderConnections();
+      pushHistoryDebounced();
       save();
     });
   });
@@ -2514,6 +2981,7 @@
     if (mode === "view") return;
     state.projectName = $projectTitle.value;
     document.title = ($projectTitle.value || "Untitled Storyboard") + " — Loom";
+    pushHistoryDebounced();
     save();
   });
 
@@ -2543,19 +3011,6 @@
     .getElementById("btn-reset-view")
     .addEventListener("click", centerView);
 
-  document.getElementById("btn-export").addEventListener("click", () => {
-    const blob = new Blob([JSON.stringify(state, null, 2)], {
-      type: "application/json",
-    });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = slugifyFilename(state.projectName);
-    a.click();
-    URL.revokeObjectURL(url);
-    toast("Storyboard exported");
-  });
-
   document
     .getElementById("btn-import")
     .addEventListener("click", () => $importInput.click());
@@ -2573,12 +3028,16 @@
         if (!Array.isArray(state.connections)) state.connections = [];
         state.cards = state.cards.map(normalizeCard);
         state.connections = state.connections.map(normalizeConnection);
+        // Reset history — the imported board is a clean starting point
+        clearHistory();
         clearSelection();
         applyProjectName();
         renderAll();
         zoomToFit();
         save();
         setMode("view");
+        // Record the freshly-imported state as the first history entry
+        pushHistory();
         toast("Storyboard imported — opened in view mode");
       } catch {
         toast("That file could not be read");
@@ -2590,11 +3049,13 @@
   document.getElementById("btn-clear").addEventListener("click", () => {
     if (mode === "view") return;
     if (state.cards.length === 0) return;
-    if (confirm("Clear the entire storyboard? This cannot be undone.")) {
+    if (confirm("Clear the entire storyboard? (You can Ctrl+Z to undo this.)")) {
+      flushHistoryDebounce();
       state.cards = [];
       state.connections = [];
       clearSelection();
       renderAll();
+      pushHistory();
       save();
       toast("Board cleared");
     }
@@ -2627,6 +3088,23 @@
     bindMarkdownFields();
   }
 
+  /* ====================================================
+     PUBLIC API — consumed by scripts/loom-export.js
+     ----------------------------------------------------
+     Kept deliberately small: just enough read access for the
+     exporter to build a Project (.json) download and a
+     Storyboard (.png) snapshot without it having to reach into
+     app.js's closures directly.
+     ==================================================== */
+  window.LoomApp = {
+    getState: () => state,
+    getMode: () => mode,
+    getProjectName: () => state.projectName || "Untitled Storyboard",
+    getCardsBounds,
+    slugifyFilename,
+    toast,
+  };
+
   function init() {
     load();
     state.cards = state.cards.map(normalizeCard);
@@ -2647,6 +3125,7 @@
     initSVG();
     initSelectionBox();
     initTooltips();
+    applyControlTooltips();
     initModeDropdown();
     syncModeDropdown();
     initConnContextMenu();
@@ -2659,6 +3138,12 @@
     if (state.cards.length === 0) centerView();
     else applyView();
     renderAll();
+
+    // Inject undo/redo buttons before pushing the initial history snapshot
+    // so syncUndoRedoButtons() can find and update them immediately.
+    injectUndoRedoButtons();
+    pushHistory(); // snapshot of the loaded/initial state
+
     window.addEventListener("resize", () => {
       applyPanelLayout();
       applyView();
