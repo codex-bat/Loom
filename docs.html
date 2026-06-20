@@ -1,0 +1,918 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>loom — full feature reference</title>
+<style>
+  :root {
+    --accent: #6fe3c8;
+    --accent-alt: #8fb4ff;
+    --dim: #6c6f78;
+    --text: #ddd;
+    --warn-col: #ffb36b;
+    --error: #ff7b9c;
+    --bg-deep: #0c0c0c;
+  }
+
+  html { scrollbar-gutter: stable; }
+
+  body {
+    background: #000;
+    color: var(--text);
+    font-family: 'Courier New', monospace;
+    margin: 0;
+    padding: 2rem;
+    line-height: 1.6;
+    scrollbar-width: thin;
+    scrollbar-color: #f5f5f5 #000;
+  }
+
+  body::-webkit-scrollbar { width: 10px; }
+  body::-webkit-scrollbar-track { background: #000; }
+  body::-webkit-scrollbar-thumb {
+    background: radial-gradient(circle at 35% 35%, #fff 0%, #d0d0d0 70%, #a8a8a8 100%);
+    border: 2px solid #000;
+    border-radius: 999px;
+  }
+  body::-webkit-scrollbar-thumb:hover {
+    background: radial-gradient(circle at 35% 35%, #fff 0%, #e7e7e7 68%, #bebebe 100%);
+  }
+
+  .container { max-width: 860px; margin: 0 auto; }
+
+  header {
+    border-bottom: 2px solid #2a2a2a;
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+  }
+
+  .brand {
+    display: flex;
+    align-items: baseline;
+    gap: 0.7rem;
+    margin-bottom: 0.4rem;
+  }
+
+  .brand h1 {
+    font-size: 2.4rem;
+    margin: 0;
+    color: #fff;
+    letter-spacing: -0.05em;
+  }
+
+  .brand-sub {
+    color: var(--accent);
+    font-size: 0.78rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    padding: 0.18em 0.55em;
+    border: 1px solid var(--accent);
+    opacity: 0.75;
+  }
+
+  .post-meta {
+    color: #888;
+    font-size: 0.82rem;
+    margin-bottom: 0.8rem;
+    border-left: 3px solid var(--accent);
+    padding-left: 0.5rem;
+  }
+
+  nav { margin-top: 0.5rem; }
+  nav a {
+    color: var(--accent-alt);
+    text-decoration: none;
+    margin-right: 1rem;
+    font-size: 0.88rem;
+  }
+  nav a:hover { text-decoration: underline; }
+
+  /* ── HEADINGS ───────────────────────────────────── */
+  h2 {
+    border-left: 5px solid var(--accent);
+    padding-left: 0.8rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: -0.05em;
+    margin-top: 0;
+    margin-bottom: 1rem;
+    font-size: 1.35rem;
+    color: var(--accent);
+    line-height: 1.2;
+  }
+
+  h3 {
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: -0.03em;
+    margin-top: 1.8rem;
+    margin-bottom: 0.65rem;
+    font-size: 1.05rem;
+    border-left: 3px solid var(--accent-alt);
+    padding-left: 0.7rem;
+    color: #d0dcff;
+    line-height: 1.2;
+  }
+
+  h4 {
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: var(--dim);
+    margin: 1.2rem 0 0.4rem;
+    font-weight: 700;
+  }
+
+  /* ── SECTION CARDS ──────────────────────────────── */
+  .section {
+    background: var(--bg-deep);
+    border: 1px solid #2a2a2a;
+    padding: 1.6rem 1.8rem;
+    margin-bottom: 1.8rem;
+  }
+
+  p { margin: 0.55rem 0 0.85rem; }
+
+  a { color: var(--accent-alt); text-decoration: underline; text-underline-offset: 3px; transition: color 0.15s; }
+  a:hover { color: var(--accent); }
+
+  code {
+    background: #111;
+    color: #a8f5de;
+    padding: 0.12rem 0.38rem;
+    border-radius: 4px;
+    font-size: 0.86em;
+    border: 1px solid #1e2a24;
+  }
+
+  kbd {
+    background: #1a1a1a;
+    color: #e0e0e0;
+    padding: 0.15em 0.48em;
+    border: 1px solid #444;
+    border-bottom: 2px solid #2a2a2a;
+    border-radius: 4px;
+    font-family: 'Courier New', monospace;
+    font-size: 0.83em;
+  }
+
+  /* ── TABLE OF CONTENTS ──────────────────────────── */
+  .toc {
+    background: #080808;
+    border: 1px solid #2a2a2a;
+    padding: 1.2rem 1.5rem;
+    margin-bottom: 2.2rem;
+  }
+
+  .toc-title {
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--dim);
+    margin-bottom: 0.9rem;
+  }
+
+  .toc ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(195px, 1fr));
+    gap: 0.2rem 0.5rem;
+  }
+
+  .toc li { margin: 0; }
+  .toc a {
+    color: #888;
+    text-decoration: none;
+    font-size: 0.86rem;
+    display: block;
+    padding: 0.1rem 0;
+  }
+  .toc a::before { content: "→ "; color: var(--dim); }
+  .toc a:hover { color: var(--accent); }
+
+  /* ── TABLES ─────────────────────────────────────── */
+  .feat-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.88rem;
+    margin: 0.9rem 0;
+  }
+
+  .feat-table th {
+    text-align: left;
+    color: var(--accent);
+    border-bottom: 1px solid #2a2a2a;
+    padding: 0.35rem 0.6rem 0.45rem;
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.09em;
+  }
+
+  .feat-table td {
+    padding: 0.42rem 0.6rem;
+    border-bottom: 1px solid #181818;
+    vertical-align: top;
+    line-height: 1.5;
+  }
+
+  .feat-table tr:last-child td { border-bottom: none; }
+
+  .feat-table td:first-child {
+    color: #fff;
+    white-space: nowrap;
+    font-weight: bold;
+    min-width: 110px;
+  }
+
+  /* ── CALLOUT BOXES ──────────────────────────────── */
+  .note-box {
+    border-left: 3px solid var(--accent);
+    background: #071410;
+    padding: 0.65rem 1rem;
+    margin: 1rem 0;
+    font-size: 0.88rem;
+    color: #7fcfb4;
+  }
+
+  .warn-box {
+    border-left: 3px solid var(--warn-col);
+    background: #160f00;
+    padding: 0.65rem 1rem;
+    margin: 1rem 0;
+    font-size: 0.88rem;
+    color: #c8a060;
+  }
+
+  .danger-box {
+    border-left: 3px solid var(--error);
+    background: #160008;
+    padding: 0.65rem 1rem;
+    margin: 1rem 0;
+    font-size: 0.88rem;
+    color: #c07080;
+  }
+
+  /* ── SHORTCUT GRID ──────────────────────────────── */
+  .shortcut-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
+    gap: 0.45rem;
+    margin: 1rem 0;
+  }
+
+  .sc-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.38rem 0.6rem;
+    background: #0d0d0d;
+    border: 1px solid #1c1c1c;
+  }
+
+  .sc-keys {
+    display: flex;
+    gap: 0.25rem;
+    flex-shrink: 0;
+    min-width: 140px;
+    flex-wrap: wrap;
+  }
+
+  .sc-desc { color: #999; font-size: 0.82rem; }
+
+  /* ── TAGS ───────────────────────────────────────── */
+  .tag {
+    display: inline-block;
+    font-size: 0.66rem;
+    padding: 0.1em 0.45em;
+    border-radius: 2px;
+    font-weight: bold;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    vertical-align: middle;
+  }
+
+  .tag-edit  { background: #0e1f12; color: #6fe3c8; border: 1px solid #1a3820; }
+  .tag-view  { background: #0d0e1f; color: #8fb4ff; border: 1px solid #18184a; }
+  .tag-both  { background: #1e1400; color: #ffb36b; border: 1px solid #3a2800; }
+
+  /* ── ANATOMY GRID ───────────────────────────────── */
+  .two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.2rem;
+    margin: 1rem 0;
+  }
+
+  /* ── MISC ───────────────────────────────────────── */
+  blockquote {
+    border-left: 3px solid var(--accent);
+    padding-left: 1rem;
+    margin: 1.2rem 0;
+    color: #ccc;
+    font-style: italic;
+  }
+
+  hr {
+    border: 0;
+    border-top: 1px solid #1c1c1c;
+    margin: 2rem 0;
+  }
+
+  ul, ol { margin-left: 1.5rem; margin-bottom: 1rem; }
+  li { margin-bottom: 0.38rem; }
+
+  .b   { font-weight: bold; }
+  .bi  { font-weight: bold; font-style: italic; }
+  .i   { font-style: italic; }
+  .dim { color: var(--dim); }
+  .hi  { color: var(--accent); font-weight: bold; }
+  .wi  { color: var(--warn-col); }
+  .er  { color: var(--error); }
+
+  footer {
+    margin-top: 3rem;
+    text-align: center;
+    color: #444;
+    font-size: 0.7rem;
+    border-top: 1px dashed #2a2a2a;
+    padding-top: 1rem;
+  }
+
+  /* ── BACK TO TOP ────────────────────────────────── */
+  .back-to-top {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    background: var(--bg-deep);
+    border: 1px solid #2a2a2a;
+    color: var(--accent);
+    font-family: 'Courier New', monospace;
+    font-size: 0.85rem;
+    padding: 0.4rem 0.85rem;
+    cursor: pointer;
+    z-index: 1000;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.2s, visibility 0.2s;
+    border-radius: 3px;
+    text-decoration: none;
+  }
+  .back-to-top:hover { border-color: var(--accent); color: var(--accent); }
+  .back-to-top.show  { opacity: 1; visibility: visible; }
+
+  @media (max-width: 620px) {
+    body { padding: 1rem; }
+    .two-col { grid-template-columns: 1fr; }
+    .shortcut-grid { grid-template-columns: 1fr; }
+    .toc ul { grid-template-columns: 1fr; }
+    .back-to-top { right: auto; left: 50%; transform: translateX(-50%); }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <header>
+    <div class="brand">
+      <h1>loom</h1>
+      <span class="brand-sub">docs</span>
+    </div>
+    <div class="post-meta">storyboard maker — complete feature reference</div>
+    <nav>
+      <a href="#canvas">canvas</a>
+      <a href="#frames">frames</a>
+      <a href="#blocks">blocks</a>
+      <a href="#connections">strings</a>
+      <a href="#selection">selection</a>
+      <a href="#snap">snap</a>
+      <a href="#inspector">inspector</a>
+      <a href="#framelist">sequence</a>
+      <a href="#modes">modes</a>
+      <a href="#history">undo/redo</a>
+      <a href="#project">project</a>
+      <a href="#panels">panels</a>
+      <a href="#shortcuts">shortcuts</a>
+      <a href="#persistence">persistence</a>
+    </nav>
+  </header>
+
+  <div class="toc">
+    <div class="toc-title">// table of contents</div>
+    <ul>
+      <li><a href="#canvas">the canvas</a></li>
+      <li><a href="#frames">frames</a></li>
+      <li><a href="#blocks">blocks</a></li>
+      <li><a href="#connections">string connections</a></li>
+      <li><a href="#selection">selection</a></li>
+      <li><a href="#snap">snap-align</a></li>
+      <li><a href="#inspector">inspector panel</a></li>
+      <li><a href="#framelist">sequence / frame list</a></li>
+      <li><a href="#modes">edit & view modes</a></li>
+      <li><a href="#history">undo / redo</a></li>
+      <li><a href="#project">project management</a></li>
+      <li><a href="#panels">panel resizing</a></li>
+      <li><a href="#shortcuts">keyboard shortcuts</a></li>
+      <li><a href="#persistence">persistence</a></li>
+    </ul>
+  </div>
+
+
+  <!-- ══════════════════════════════════════════════════════════════ -->
+  <div class="section" id="canvas">
+    <h2>the canvas</h2>
+
+    <p>everything lives on an infinite scrollable world. the <span class="b">canvas</span> is the outer viewport element; the <span class="hi">world</span> is what actually moves inside it. all frame positions are stored in world-space coordinates — so when you pan and zoom, the X/Y numbers in the inspector don't change, only your perspective on them does. the world's transform is just a CSS <code>translate(x, y) scale(s)</code> on a single div.</p>
+
+    <h3>panning</h3>
+    <p>three ways to get around:</p>
+    <ul>
+      <li><span class="b">Ctrl + drag</span> on any empty area of the canvas</li>
+      <li><span class="b">middle-click drag</span> anywhere — canvas, world, or even on a frame (frames pass middle-click up to the pan handler)</li>
+      <li><span class="b">Ctrl + drag</span> from the pin button on a frame header also pans instead of starting a connection</li>
+    </ul>
+    <div class="note-box">panning works in both edit and view mode. when active, the cursor switches to <code>grabbing</code> and pointer capture is set on the drag start element — so the pan doesn't break if you accidentally drift outside the canvas boundary.</div>
+
+    <h3>zooming</h3>
+    <p>scroll wheel anywhere on the canvas zooms. the zoom is <span class="b">cursor-centered</span> — whatever's under your mouse stays pinned while everything else scales around it. range is locked to <code>0.15×</code>–<code>2.5×</code>. the zoom level is displayed live in the topbar readout.</p>
+
+    <h3>zoom to fit</h3>
+    <p>the <span class="b">zoom to fit</span> button (or <kbd>F</kbd>) computes the bounding box of all frames and fits the camera to it with 80px padding. caps out at <code>1.4×</code> so a single small frame doesn't get comically huge. no frames on board → falls back to centering.</p>
+
+    <h3>reset view</h3>
+    <p><span class="b">reset view</span> button or <kbd>0</kbd>. drops the camera to world origin at 1× zoom, centered in the viewport. useful when you've lost your frames somewhere in the void.</p>
+
+    <h3>the grid</h3>
+    <p>the canvas background is a layered CSS grid: major lines at <code>160px</code> intervals, minor at <code>32px</code>. both scale and translate with the view so they stay anchored to world-space rather than the screen. it's a subtle orientation aid, not a real snap grid — for actual snapping see <a href="#snap">snap-align</a>.</p>
+
+    <h3>world origin orb</h3>
+    <p>three concentric circles at world coordinate <code>(0, 0)</code>, rendered in the back SVG layer. mostly decorative — gives you a visual anchor when the board is empty. it's also a valid snap target for <a href="#snap">Ctrl+drag alignment</a>, so you can snap frame edges to the true origin if you're building something orderly.</p>
+  </div>
+
+
+  <!-- ══════════════════════════════════════════════════════════════ -->
+  <div class="section" id="frames">
+    <h2>frames</h2>
+
+    <p>frames are the core unit. each one is an absolutely-positioned element in the world with a title, color, notes, body content (blocks), and a place in the sequence. internally they're called "cards" in the code but "frames" in the UI — same thing, don't let it trip you up.</p>
+
+    <h3>creating</h3>
+    <p>hit <span class="b">New Frame</span> in the topbar or press <kbd>N</kbd>. new frames spawn at the center of your current viewport (screen → world conversion), cascading by 22px per frame (mod 6) so they don't all perfectly stack. the title input is auto-focused 30ms after creation so you can just start typing. default size: <span class="b">280 × 210px</span>.</p>
+
+    <h3>moving</h3>
+    <p>drag anywhere on the frame that isn't an interactive element (buttons, inputs, block controls, resize handle). position updates live; connections attached to the frame follow in real-time. hold <kbd>Ctrl</kbd> while dragging for snap alignment — see <a href="#snap">snap-align</a>.</p>
+
+    <h3>resizing</h3>
+    <p>grab the <span class="b">resize handle</span> at the bottom-right corner. drag to resize. minimums are enforced at <code>180px</code> wide and <code>130px</code> tall. the inspector's W/H fields update live while you drag.</p>
+
+    <h3>deleting</h3>
+    <ul>
+      <li><span class="b">Delete Frame</span> button at the bottom of the inspector</li>
+      <li><kbd>Del</kbd> or <kbd>Backspace</kbd> (when focus isn't in an editable input)</li>
+      <li>the <code>×</code> button in the frame's row in the left panel</li>
+    </ul>
+    <p>deleting a frame immediately removes all connections that touch it. if multiple frames are selected, any of the above deletes the whole selection.</p>
+
+    <h3>frame anatomy</h3>
+    <div class="two-col">
+      <div>
+        <h4>visual structure (top → bottom)</h4>
+        <ul>
+          <li><span class="b">color tag</span> — thin accent strip at the top edge</li>
+          <li><span class="b">header</span> — number badge · title input · pin button</li>
+          <li><span class="b">body</span> — blocks, or an empty-state hint</li>
+          <li><span class="b">toolbar</span> — Text / Image / Link add buttons (edit mode only)</li>
+          <li><span class="b">resize handle</span> — bottom-right corner (edit mode only)</li>
+        </ul>
+      </div>
+      <div>
+        <h4>per-card CSS custom properties</h4>
+        <ul>
+          <li><code>--card-color</code> — full hex value</li>
+          <li><code>--card-color-dim</code> — hex at 40% opacity</li>
+          <li><code>--card-color-mid</code> — hex at 70% opacity</li>
+          <li><code>--card-color-glow</code> — hex at 22% opacity</li>
+        </ul>
+        <p class="dim" style="font-size:0.82rem;">available on every <code>.card</code> element if you want to use them in custom theme CSS.</p>
+      </div>
+    </div>
+
+    <h3>frame numbers</h3>
+    <p>the two-digit badge in the header reflects the frame's <span class="i">index</span> in <code>state.cards[]</code>, not a stored ID. numbers can shift when frames are deleted. the actual stable identifier is the internal <code>uid()</code> string (e.g. <code>id3x9kmf2</code>). the number is display-only.</p>
+
+    <h3>frame line</h3>
+    <p>a tagging property: <code>left</code> · <code>right</code> · <code>up</code> · <code>down</code> · <code>none</code>. set in the inspector, stored in <code>card.frameLine</code>, exposed as <code>data-frame-line</code> on the DOM element. loom doesn't enforce any visual behavior from it — it's an annotation for your own narrative direction system or CSS-based filtering. defaults to <code>left</code>.</p>
+  </div>
+
+
+  <!-- ══════════════════════════════════════════════════════════════ -->
+  <div class="section" id="blocks">
+    <h2>blocks</h2>
+
+    <p>a frame's body is made of zero or more <span class="bi">blocks</span> — the actual content units inside a frame. three types exist.</p>
+
+    <h3>text block</h3>
+    <p>added via the <span class="b">Aa</span> toolbar button. it's a <code>contenteditable</code> div. type directly into it. changes save on each keystroke (with debouncing for history, see <a href="#history">undo/redo</a>). not editable in view mode.</p>
+
+    <h3>image block</h3>
+    <p>added via the <span class="b">▢</span> button. triggers a hidden file picker (<code>accept="image/*"</code>). the image is read as a base64 data URL via FileReader and stored <span class="wi">directly in the save state JSON</span>. no external hosting, no compression — just raw base64. this means image-heavy boards bloat fast.</p>
+
+    <h3>link block</h3>
+    <p>added via the <span class="b">🔗</span> button. starts as a temporary <span class="bi">link-edit</span> state with a text input. paste a URL, press <kbd>Enter</kbd> or click "Add". if you omit the protocol, <code>https://</code> gets prepended automatically. the hostname is extracted and used as the display label. <kbd>Escape</kbd> cancels and removes the block. once confirmed, renders as a styled anchor (↗ icon, hostname as title, full URL as subtitle) that opens in a new tab.</p>
+
+    <h3>reordering blocks</h3>
+    <p>each block has a <span class="b">drag handle</span> (the three-line icon on the block controls). drag it up or down within the frame body to reorder. the order is written back to <code>card.blocks[]</code> on pointer-up. a history entry is pushed if anything moved.</p>
+
+    <h3>deleting blocks</h3>
+    <p>the <code>×</code> button on the block controls removes it from the array and re-renders the frame. edit mode only.</p>
+
+    <div class="note-box">toolbar and block controls are completely absent in view mode. the body becomes read-only. empty frames show a mode-appropriate hint string — encouraging in edit mode, neutral in view mode.</div>
+  </div>
+
+
+  <!-- ══════════════════════════════════════════════════════════════ -->
+  <div class="section" id="connections">
+    <h2>string connections</h2>
+
+    <p>frames can be connected with a literal string — a physics-animated quadratic Bézier thread rendered in a dedicated SVG layer. connections form a <span class="hi">directed acyclic graph</span>: each frame can have at most one parent, cycles are forbidden.</p>
+
+    <h3>creating a connection</h3>
+    <p>drag from the <span class="b">pin button</span> (the small tinted circle in the frame header's top-right corner) toward another frame and release over it. while you drag:</p>
+    <ul>
+      <li>the string belly is <span class="b">physics-simulated</span> — spring (<code>k = 0.09</code>), gravity (<code>1.5</code>), damping (<code>0.86</code>) — and lags behind your cursor in a satisfying way</li>
+      <li>hovering a <span class="b">valid target</span> turns the string teal and highlights the target</li>
+      <li>hovering an <span class="er">invalid target</span> (already has a parent, or would cycle back) turns the string red and highlights the target red</li>
+      <li>releasing over a valid target creates the connection and plays a <span class="b">settle animation</span> (<code>easeOutBack</code>, 380ms) where the belly springs to its resting position</li>
+    </ul>
+    <div class="warn-box">each frame can only have one incoming connection (one parent). trying to connect to a frame that already has a parent is an invalid drop and gets rejected with a toast message.</div>
+
+    <h3>the thread rendering</h3>
+    <p>each connection renders as four SVG paths stacked on the same Bézier <code>d</code> value:</p>
+    <ul>
+      <li><span class="b">hit path</span> — transparent, 16px stroke, catches all pointer events</li>
+      <li><span class="b">shadow path</span> — dark, 3px, gives the string depth against the canvas</li>
+      <li><span class="b">thread path</span> — amber-gold <code>rgba(228,190,112,0.9)</code>, 1.7px, with a soft SVG glow filter</li>
+      <li><span class="b">shimmer path</span> — very faint dashed highlight, 0.7px, adds texture</li>
+    </ul>
+    <p>plus a <span class="b">tack icon</span> at each endpoint — a three-layer circle SVG that looks like a physical thumbtack. the tack at the destination animates briefly with a "pop" class on the settle animation.</p>
+    <p>the resting belly position follows <code>midpoint + dist × 0.28 + 36</code> — so longer strings sag more, shorter strings still have a gentle curve.</p>
+
+    <h3>deleting a connection</h3>
+    <p><span class="b">click anywhere on the thread</span> to delete it immediately. the hit path is 16px wide and transparent, so you don't need to be pixel-precise. deleted in view mode? nothing happens — click is guarded. want more options? right-click instead.</p>
+
+    <h3>connection context menu</h3>
+    <p><span class="b">right-click a thread</span> for a small context menu:</p>
+    <ul>
+      <li><span class="b">Send behind frames</span> — sets <code>conn.layer = "back"</code>, moves the string to the back SVG layer (<code>z-index: -1</code>)</li>
+      <li><span class="b">Bring in front of frames</span> — sets <code>conn.layer = "front"</code>, front SVG layer (<code>z-index: 50</code>)</li>
+      <li><span class="b">Apply to all strings</span> — pushes the current connection's layer setting to every connection on the board at once</li>
+    </ul>
+    <p>the active option is shown as checked and disabled (can't "bring in front" something already in front). dismiss by clicking elsewhere or pressing <kbd>Escape</kbd>.</p>
+
+    <h3>SVG layer architecture</h3>
+    <p>there are two SVG elements in the world: <code>#conn-svg-back</code> (behind frames, also holds the world origin orb) and <code>#conn-svg</code> (in front of everything). each has its own copies of the SVG filter defs with suffix variants (<code>-back</code>) to avoid ID collisions. during drag and settle animation, connections always render in the front layer regardless of their <code>conn.layer</code> setting.</p>
+  </div>
+
+
+  <!-- ══════════════════════════════════════════════════════════════ -->
+  <div class="section" id="selection">
+    <h2>selection</h2>
+
+    <h3>single selection</h3>
+    <p>click a frame header, or click its row in the left panel frame list. the inspector updates to show that frame. the selected frame and its list row both get the <code>.selected</code> class.</p>
+
+    <h3>marquee / box selection</h3>
+    <p>drag from an <span class="b">empty area</span> of the canvas (not on any frame). a selection rectangle appears. on mouse-up, any frames whose screen-space bounding rectangles intersect the box get selected. the marquee element is <code>div.selection-box</code> absolutely positioned within the canvas viewport.</p>
+    <p>hold <kbd>Shift</kbd> while drawing the marquee to <span class="b">add to existing selection</span> instead of replacing it.</p>
+
+    <h3>multi-selection</h3>
+    <p>when 2+ frames are selected:</p>
+    <ul>
+      <li>the inspector panel shows a <span class="b">count + lock message</span> instead of properties</li>
+      <li>dragging any selected frame <span class="b">moves all selected frames together</span> (group drag)</li>
+      <li><kbd>Del</kbd> or the delete frame button removes all selected frames and their connections</li>
+      <li>per-frame properties (color, frame line, etc.) are locked until you're back to a single selection</li>
+    </ul>
+    <p>press <kbd>Escape</kbd> to clear selection entirely.</p>
+
+    <h3>group drag</h3>
+    <p>triggered automatically when you drag any frame while 2+ are selected. all frames move by the same world-space delta. the frame you clicked is the <span class="b">anchor</span> — if you hold <kbd>Ctrl</kbd>, snap-align is computed relative to the anchor and the same snap offset is applied to all others.</p>
+  </div>
+
+
+  <!-- ══════════════════════════════════════════════════════════════ -->
+  <div class="section" id="snap">
+    <h2>snap-align</h2>
+
+    <p>hold <kbd>Ctrl</kbd> while dragging a frame (single or group) and its edges will snap to the edges and centers of all other frames, as well as the world origin.</p>
+
+    <h3>snap candidates</h3>
+    <p>for every non-selected frame, loom collects six values: <code>x</code>, <code>x + w/2</code>, <code>x + w</code> (left, center, right) and <code>y</code>, <code>y + h/2</code>, <code>y + h</code> (top, center, bottom). world origin <code>(0, 0)</code> is always included. your dragged frame's own six edge/center values are compared against all candidates. closest pair within the threshold wins — independently for X and Y.</p>
+
+    <h3>threshold</h3>
+    <p><span class="b">8 screen pixels</span>, divided by the current zoom scale to get world units. at 50% zoom that's 16 world units of pull; at 200% it's 4. the closer you zoom in, the more precise you need to be to trigger a snap.</p>
+
+    <h3>guide lines</h3>
+    <p>when an X or Y snap is active, a dashed guide line draws across the full visible viewport in the accent color at 0.85 opacity — vertical line for X snaps, horizontal for Y. they live in the front SVG layer and disappear the moment you release the mouse (the SVG is cleared on drag-up and guides aren't redrawn without an active snap).</p>
+
+    <div class="note-box">snap is only active while <kbd>Ctrl</kbd> is held. let go mid-drag and the frame goes back to free movement immediately. the guide lines vanish with it.</div>
+  </div>
+
+
+  <!-- ══════════════════════════════════════════════════════════════ -->
+  <div class="section" id="inspector">
+    <h2>inspector panel</h2>
+
+    <p>the right panel. shows frame properties when exactly one frame is selected. shows an empty state when nothing is selected, or a lock message when multiple frames are selected. all inputs are disabled in view mode and during multi-select.</p>
+
+    <h3>fields</h3>
+    <table class="feat-table">
+      <thead><tr><th>field</th><th>what it does</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>Title</td>
+          <td>two-way synced with the frame's header input. max 60 chars. typing in either location updates both. also updates the frame list row label in real-time.</td>
+        </tr>
+        <tr>
+          <td>Tag color</td>
+          <td>six preset swatches. clicking one applies the color to the frame's accent strip, updates all four <code>--card-color-*</code> CSS custom properties, and regenerates the pin button SVG fill to match. active swatch gets the <code>.active</code> class.</td>
+        </tr>
+        <tr>
+          <td>X / Y</td>
+          <td>world-space position of the frame's top-left corner in pixels. both are editable. updating them moves the frame DOM element immediately and re-renders connections. changes are debounced for history.</td>
+        </tr>
+        <tr>
+          <td>W / H</td>
+          <td>frame width and height. minimums enforced: W ≥ 180, H ≥ 130. updating resizes the frame live. changes are debounced for history.</td>
+        </tr>
+        <tr>
+          <td>Notes</td>
+          <td>free-text textarea. director's notes, camera angles, dialogue, whatever. stored in <code>card.notes</code>, inspector-only — not displayed on the frame itself anywhere.</td>
+        </tr>
+        <tr>
+          <td>Frame line</td>
+          <td>button group: Left / Right / Up / Down / None. sets <code>card.frameLine</code> and <code>data-frame-line</code> on the element. annotation-only, loom doesn't enforce layout from it. see <a href="#frames">frames → frame line</a>.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h3>Delete Frame button</h3>
+    <p>always at the bottom of the inspector content area. deletes the selected frame (or all selected frames if somehow multi is shown). same behavior as <kbd>Del</kbd>. can't be used in view mode — the button is inside the inspector which is hidden/locked anyway.</p>
+  </div>
+
+
+  <!-- ══════════════════════════════════════════════════════════════ -->
+  <div class="section" id="framelist">
+    <h2>sequence / frame list</h2>
+
+    <p>the left panel's main section. shows all frames in order, with the parent-child hierarchy from string connections rendered as indented tree nodes.</p>
+
+    <h3>ordering & hierarchy</h3>
+    <p>root frames (no parent) appear in <code>state.cards[]</code> creation order. each root's children are listed immediately after it, indented with a ↳ connector icon, then their children, and so on. depth is tracked and capped at CSS class <code>depth-3</code> (deeper nesting still works, just doesn't indent further).</p>
+    <p>a visited-set prevents duplicate rendering in edge cases. any frames not reached through the root traversal (shouldn't happen since cycles are blocked) are appended at the end.</p>
+
+    <h3>clicking a row</h3>
+    <p>selects the frame <span class="b">and pans the camera to center on it</span>. the pan is immediate (no animation). great for navigating large boards without hunting visually.</p>
+
+    <h3>per-row elements</h3>
+    <ul>
+      <li><span class="b">color dot</span> — matches the frame's tag color</li>
+      <li><span class="b">number</span> — zero-padded two-digit sequence index</li>
+      <li><span class="b">title</span> — frame title, or "Untitled frame" if blank</li>
+      <li><span class="b">× button</span> — deletes that frame (only visible in edit mode)</li>
+    </ul>
+
+    <h3>soft updates</h3>
+    <p>when you type in a frame's title input, the frame list updates the title text in-place via <code>renderFrameListSoft()</code> — patching just the text node instead of rebuilding the whole list. avoids flicker and preserves scroll position.</p>
+  </div>
+
+
+  <!-- ══════════════════════════════════════════════════════════════ -->
+  <div class="section" id="modes">
+    <h2>edit &amp; view modes</h2>
+
+    <p>two modes, switchable from the dropdown in the topbar center. the dropdown also lives in the topbar and shows the current mode with a colored dot indicator.</p>
+
+    <table class="feat-table">
+      <thead><tr><th>capability</th><th><span class="tag tag-edit">edit</span></th><th><span class="tag tag-view">view</span></th></tr></thead>
+      <tbody>
+        <tr><td>pan / zoom</td><td>✓</td><td>✓</td></tr>
+        <tr><td>create frames</td><td>✓</td><td>✗</td></tr>
+        <tr><td>move / resize frames</td><td>✓</td><td>✗</td></tr>
+        <tr><td>delete frames</td><td>✓</td><td>✗</td></tr>
+        <tr><td>edit title / blocks</td><td>✓</td><td>✗</td></tr>
+        <tr><td>add / delete connections</td><td>✓</td><td>✗</td></tr>
+        <tr><td>inspector editing</td><td>✓</td><td>✗ (locked)</td></tr>
+        <tr><td>edit project name</td><td>✓</td><td>✗</td></tr>
+        <tr><td>undo / redo</td><td>✓</td><td>✗ (locked)</td></tr>
+        <tr><td>export / import</td><td>✓</td><td>✓</td></tr>
+        <tr><td>marquee selection</td><td>✓</td><td>✗</td></tr>
+        <tr><td>click link blocks</td><td>✓</td><td>✓</td></tr>
+        <tr><td>frame list navigation</td><td>✓</td><td>✓</td></tr>
+      </tbody>
+    </table>
+
+    <h3>persistence</h3>
+    <p>the active mode is saved to localStorage under <code>loom-mode-v1</code> and restored on page load. importing a JSON board always switches to view mode afterward — sensible default when someone hands you a finished storyboard.</p>
+
+    <h3>body class</h3>
+    <p><code>document.body</code> gets the class <code>view-mode</code> in view mode. your theme CSS can use this selector to hide/show or restyle anything you want per-mode without touching the JS.</p>
+  </div>
+
+
+  <!-- ══════════════════════════════════════════════════════════════ -->
+  <div class="section" id="history">
+    <h2>undo / redo</h2>
+
+    <p>snapshot-based history. every meaningful action pushes a deep clone of the full <code>state</code> object (via <code>JSON.parse(JSON.stringify(state))</code>) onto a stack capped at <span class="b">60 entries</span>. when you undo/redo, the snapshot replaces the current state and the board re-renders entirely.</p>
+
+    <h3>what's preserved vs. excluded</h3>
+    <p>snapshots capture: <code>cards</code>, <code>connections</code>, <code>projectName</code>, <code>nextNum</code>. <span class="b">camera position (<code>view</code>) and panel widths (<code>layout</code>) are deliberately excluded</span> — they're restored from the live state during undo/redo so the viewport doesn't jump around while you're correcting mistakes.</p>
+
+    <h3>debounced text input</h3>
+    <p>typing in title, notes, or text block inputs uses a <span class="b">debounced push with a 700ms delay</span>. this means you don't get a history entry per keystroke — only after you stop typing for 700ms does the change commit. if you then do something destructive (delete a frame, add a connection, clear the board), any pending debounced push is <span class="b">flushed immediately</span> as its own separate history entry first. the text change and the action end up as two distinct undo steps, which is what you want.</p>
+
+    <h3>keyboard shortcuts</h3>
+    <div style="margin: 0.7rem 0;">
+      <kbd>Ctrl</kbd>+<kbd>Z</kbd> — undo &nbsp;&nbsp;
+      <kbd>Ctrl</kbd>+<kbd>Y</kbd> — redo &nbsp;&nbsp;
+      <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>Z</kbd> — redo (alternate)
+    </div>
+    <p>undo/redo buttons are injected into the topbar (right of "New Frame") on init. they auto-disable when the stack boundaries are hit and are fully locked in view mode.</p>
+
+    <div class="danger-box">undo history is <span class="b">session-only</span>. refreshing the page starts fresh. importing a board clears history and treats the import as the baseline. the initial loaded state always gets pushed as the first history entry, so you can undo back to it.</div>
+  </div>
+
+
+  <!-- ══════════════════════════════════════════════════════════════ -->
+  <div class="section" id="project">
+    <h2>project management</h2>
+
+    <h3>project name</h3>
+    <p>editable text field in the top of the left panel. max 60 chars. updates <code>document.title</code> in real-time as <code>[name] — Loom</code>. on blur, if the field is blank or whitespace, it resets to "Untitled Storyboard". locked in view mode.</p>
+
+    <h3>export</h3>
+    <p>downloads the full <code>state</code> object as formatted JSON. filename is slugified from the project name — spaces become hyphens, special characters stripped, <code>.json</code> extension appended. example: "My Film Act 2" → <code>My-Film-Act-2.json</code>. exported via object URL + anchor click trick, no server involved.</p>
+    <p>exported JSON shape: <code>{ cards, connections, view, layout, nextNum, projectName }</code>.</p>
+
+    <h3>import</h3>
+    <p>triggers a JSON file picker. on load:</p>
+    <ul>
+      <li>parses and validates (must have a <code>cards</code> array)</li>
+      <li>merges over <code>DEFAULT_STATE()</code> so missing fields get sane defaults</li>
+      <li>normalizes all cards and connections</li>
+      <li>clears undo history, clears selection</li>
+      <li>zooms to fit, saves to localStorage</li>
+      <li>automatically <span class="b">switches to view mode</span></li>
+      <li>pushes the imported state as the first (and only) history entry</li>
+    </ul>
+    <p>invalid file → error toast, nothing changes.</p>
+
+    <h3>clear</h3>
+    <p>shows a native <code>confirm()</code> dialog — because this wipes everything. if confirmed, removes all cards and connections, clears selection, pushes to history, saves. edit mode only; does nothing if the board is already empty. <span class="b">it is undoable</span> via <kbd>Ctrl</kbd>+<kbd>Z</kbd> (the confirm dialog says so).</p>
+  </div>
+
+
+  <!-- ══════════════════════════════════════════════════════════════ -->
+  <div class="section" id="panels">
+    <h2>panel resizing</h2>
+
+    <p>both sidepanels have a thin drag handle at their outer edge. drag it to resize. the canvas area always keeps a minimum of <span class="b">420px</span> — if both panels combined would steal more than <code>viewport - 420px</code>, the right panel shrinks first, then the left.</p>
+
+    <table class="feat-table">
+      <thead><tr><th>constraint</th><th>value</th></tr></thead>
+      <tbody>
+        <tr><td>panel min width</td><td>180px</td></tr>
+        <tr><td>panel max width</td><td>420px</td></tr>
+        <tr><td>canvas min width</td><td>420px</td></tr>
+        <tr><td>mobile breakpoint</td><td>≤ 680px viewport</td></tr>
+      </tbody>
+    </table>
+
+    <h3>mobile</h3>
+    <p>at ≤ 680px viewport width, the left panel is hidden entirely and the right panel is fixed at 230px. resize handles are hidden. panel widths in <code>state.layout</code> are preserved but not applied until you're back on a wider screen.</p>
+
+    <h3>persistence</h3>
+    <p>panel widths are stored in <code>state.layout</code> and included in the localStorage save. normalized on every load (clamped to valid ranges), so a panel width that made sense at one screen size won't cause layout breakage at another.</p>
+  </div>
+
+
+  <!-- ══════════════════════════════════════════════════════════════ -->
+  <div class="section" id="shortcuts">
+    <h2>keyboard shortcuts</h2>
+
+    <p class="dim" style="font-size:0.85rem; margin-bottom: 1rem;">most shortcuts are guarded: they only fire when focus is not on an editable element (<code>input</code>, <code>textarea</code>, or <code>[contenteditable]</code>).</p>
+
+    <div class="shortcut-grid">
+      <div class="sc-item">
+        <div class="sc-keys"><kbd>N</kbd></div>
+        <div class="sc-desc">new frame <span class="tag tag-edit">edit</span></div>
+      </div>
+      <div class="sc-item">
+        <div class="sc-keys"><kbd>F</kbd></div>
+        <div class="sc-desc">zoom to fit all frames</div>
+      </div>
+      <div class="sc-item">
+        <div class="sc-keys"><kbd>0</kbd></div>
+        <div class="sc-desc">reset camera to center</div>
+      </div>
+      <div class="sc-item">
+        <div class="sc-keys"><kbd>Escape</kbd></div>
+        <div class="sc-desc">clear selection / close menus</div>
+      </div>
+      <div class="sc-item">
+        <div class="sc-keys"><kbd>Del</kbd> <kbd>Bksp</kbd></div>
+        <div class="sc-desc">delete selected frame(s) <span class="tag tag-edit">edit</span></div>
+      </div>
+      <div class="sc-item">
+        <div class="sc-keys"><kbd>Ctrl</kbd>+<kbd>Z</kbd></div>
+        <div class="sc-desc">undo <span class="tag tag-edit">edit</span></div>
+      </div>
+      <div class="sc-item">
+        <div class="sc-keys"><kbd>Ctrl</kbd>+<kbd>Y</kbd></div>
+        <div class="sc-desc">redo <span class="tag tag-edit">edit</span></div>
+      </div>
+      <div class="sc-item">
+        <div class="sc-keys"><kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>Z</kbd></div>
+        <div class="sc-desc">redo (alternate) <span class="tag tag-edit">edit</span></div>
+      </div>
+      <div class="sc-item">
+        <div class="sc-keys"><kbd>Scroll</kbd></div>
+        <div class="sc-desc">zoom in / out (cursor-centered)</div>
+      </div>
+      <div class="sc-item">
+        <div class="sc-keys"><kbd>Ctrl</kbd>+<kbd>Drag</kbd></div>
+        <div class="sc-desc">pan canvas — or snap-align a frame</div>
+      </div>
+      <div class="sc-item">
+        <div class="sc-keys"><kbd>Middle drag</kbd></div>
+        <div class="sc-desc">pan viewport</div>
+      </div>
+      <div class="sc-item">
+        <div class="sc-keys"><kbd>Shift</kbd>+<kbd>Drag</kbd></div>
+        <div class="sc-desc">additive marquee selection</div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ══════════════════════════════════════════════════════════════ -->
+  <div class="section" id="persistence">
+    <h2>persistence</h2>
+
+    <p>everything auto-saves to <code>localStorage</code> on every meaningful change. no manual save button — it's always already saved.</p>
+
+    <table class="feat-table">
+      <thead><tr><th>key</th><th>contents</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><code>loom-storyboard-v1</code></td>
+          <td>full state JSON — cards, connections, view, layout, nextNum, projectName</td>
+        </tr>
+        <tr>
+          <td><code>loom-mode-v1</code></td>
+          <td><code>"edit"</code> or <code>"view"</code> — the last active mode</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h3>normalization on load</h3>
+    <p>the stored JSON is parsed and every field is sanitized before use: missing fields get defaults from <code>DEFAULT_STATE()</code>, invalid <code>frameLine</code> values reset to <code>"left"</code>, invalid connection <code>layer</code> values reset to <code>"front"</code>, layout widths are clamped to valid ranges. corrupted or missing JSON just starts fresh.</p>
+
+    <h3>the image size problem</h3>
+    <p>image blocks store raw base64 data URLs. a single uncompressed PNG can easily be 1–3MB. localStorage has a <span class="b">5MB limit</span> (varies by browser). hit it and you'll see a "could not save — storage may be full" toast, and subsequent saves are silently dropped. for boards with images, export early and often.</p>
+
+    <h3>export as backup strategy</h3>
+    <p>the exported JSON is the exact same shape as what's in localStorage. it's fully re-importable. there's no versioning layer beyond the storage key suffix (<code>-v1</code>), so if a future version of loom adds new fields, old exports will still load — <code>Object.assign(DEFAULT_STATE(), parsed)</code> fills gaps with sensible defaults.</p>
+
+    <hr>
+
+    <p class="dim" style="font-size:0.82rem; text-align:center;">generated from source — if the code changed and this didn't, trust the code.</p>
+    <p class="dim" style="font-size:0.82rem; text-align:center;">— end of line —</p>
+  </div>
+
+  <footer>
+    loom storyboard — docs v1 &nbsp;·&nbsp; built on app.js
+  </footer>
+
+</div>
+
+<button class="back-to-top" aria-label="Back to top">↑ top</button>
+
+<script>
+  (function () {
+    var btn = document.querySelector('.back-to-top');
+    if (!btn) return;
+    window.addEventListener('scroll', function () {
+      btn.classList.toggle('show', window.scrollY > 300);
+    });
+    btn.addEventListener('click', function () {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+  })();
+</script>
+<script src="scripts/docs-theme-upgrade.js"></script>
+</body>
+</html>
