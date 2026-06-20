@@ -1,0 +1,19 @@
+:root {
+  --void: #14110d;
+  --void-grid: rgba(196, 167, 122, 0.08);
+  --void-grid-major: rgba(196, 167, 122, 0.15);
+  --panel: rgba(36, 30, 24, 0.82);
+  --panel-solid: #221c16;
+  --panel-border: rgba(255, 255, 255, 0.06);
+  --ink: #ecdfc8;
+  --ink-dim: #a3937a;
+  --ink-faint: #6b5d4a;
+  --accent: #e2a14d;
+  --accent-rgb: 226, 161, 77;
+  --accent-dim: rgba(226, 161, 77, 0.18);
+  --amber: #d97757;
+  --amber-dim: rgba(217, 119, 87, 0.18);
+  --danger: #d9534f;
+  --danger-dim: rgba(217, 83, 79, 0.16);
+  --string-color: rgba(212, 178, 110, 0.9);
+}
