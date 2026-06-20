@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Loom — Storyboard Maker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="themes/default.css">
+</head>
+<body>
+
+<div id="app">
+
+  <!-- ===== TOP BAR ===== -->
+  <header id="topbar">
+    <div class="brand">
+      <svg class="brand-mark" width="22" height="22" viewBox="0 0 22 22" fill="none">
+        <circle cx="11" cy="11" r="9" stroke="currentColor" stroke-width="1.6"/>
+        <circle cx="11" cy="11" r="2.4" fill="currentColor"/>
+      </svg>
+      <span class="brand-name">Loom</span>
+      <span class="brand-sub">storyboard</span>
+    </div>
+
+    <div class="topbar-center">
+
+      <!-- Custom mode dropdown -->
+      <div class="mode-dropdown" id="mode-dropdown">
+        <button class="mode-dropdown-btn" id="mode-dropdown-btn"
+                data-tooltip="Switch between edit and view mode"
+                aria-haspopup="listbox" aria-expanded="false">
+          <span class="mode-dot" id="mode-dot"></span>
+          <span id="mode-dropdown-label">Edit Mode</span>
+          <svg class="dropdown-chevron" width="10" height="6" viewBox="0 0 10 6" fill="none" aria-hidden="true">
+            <path d="M1 1l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+        <ul class="mode-dropdown-menu" id="mode-dropdown-menu" role="listbox" aria-label="Editing mode">
+          <li class="mode-dropdown-option" data-value="edit" role="option" aria-selected="true">
+            <span class="option-dot"></span>
+            <span class="option-label">Edit Mode</span>
+            <svg class="option-check" width="11" height="9" viewBox="0 0 11 9" fill="none">
+              <path d="M1 4.5l3 3L10 1" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </li>
+          <li class="mode-dropdown-option" data-value="view" role="option" aria-selected="false">
+            <span class="option-dot"></span>
+            <span class="option-label">View Mode</span>
+            <svg class="option-check" width="11" height="9" viewBox="0 0 11 9" fill="none">
+              <path d="M1 4.5l3 3L10 1" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </li>
+        </ul>
+      </div>
+
+      <div class="tbtn-divider"></div>
+
+      <button class="tbtn" id="btn-new-frame" data-tooltip="Add a new frame (N)">
+        <svg width="15" height="15" viewBox="0 0 15 15" fill="none">
+          <path d="M7.5 2v11M2 7.5h11" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+        </svg>
+        <span>New Frame</span>
+      </button>
+
+      <div class="tbtn-divider"></div>
+
+      <button class="tbtn icon" id="btn-zoom-fit" data-tooltip="Zoom to fit all frames (F)">
+        <svg width="15" height="15" viewBox="0 0 15 15" fill="none">
+          <path d="M5.5 1.5h-4v4M9.5 1.5h4v4M5.5 13.5h-4v-4M9.5 13.5h4v-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+      <button class="tbtn icon" id="btn-reset-view" data-tooltip="Reset view to center (0)">
+        <svg width="15" height="15" viewBox="0 0 15 15" fill="none">
+          <path d="M7.5 1.5a6 6 0 1 1-4.24 1.76" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+          <path d="M2 1.5v3.5h3.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+    </div>
+
+    <div class="topbar-right">
+      <span id="zoom-readout">100%</span>
+      <div class="tbtn-divider"></div>
+      <button class="tbtn" id="btn-export" data-tooltip="Export storyboard as JSON">Export</button>
+      <button class="tbtn" id="btn-import" data-tooltip="Import a JSON storyboard file">Import</button>
+      <button class="tbtn danger" id="btn-clear" data-tooltip="Clear all frames — cannot be undone">Clear</button>
+    </div>
+  </header>
+
+  <!-- ===== MAIN ===== -->
+  <div id="main">
+
+    <!-- LEFT PANEL -->
+    <aside id="left-panel">
+      <div class="project-header">
+        <input type="text" id="project-title" class="project-title-input"
+               maxlength="60" placeholder="Untitled Storyboard" spellcheck="false">
+      </div>
+
+      <div class="panel-section">
+        <div class="panel-label">Sequence</div>
+        <div id="frame-list" class="frame-list"></div>
+        <div class="empty-frames" id="empty-frames">
+          No frames yet. Press <kbd>N</kbd> or hit "New Frame" to start.
+        </div>
+      </div>
+
+      <div class="panel-section panel-section-bottom">
+        <div class="panel-label">Controls</div>
+        <div class="hint-row"><kbd>Scroll</kbd> zoom &nbsp;<kbd>0</kbd> reset</div>
+        <div class="hint-row"><kbd>Space</kbd> + drag &nbsp;/&nbsp; middle-click pan</div>
+        <div class="hint-row hint-edit-only">
+          <kbd>N</kbd> new &nbsp;<kbd>Del</kbd> remove selected
+        </div>
+        <div class="hint-row hint-edit-only">
+          <span class="hint-pin-icon">◎</span>&nbsp;Drag pin icon to link frames
+        </div>
+      </div>
+    </aside>
+
+    <!-- CANVAS -->
+    <div id="canvas">
+      <div id="world"></div>
+    </div>
+
+    <!-- RIGHT PANEL -->
+    <aside id="right-panel">
+      <div class="panel-label">Inspector</div>
+
+      <div id="inspector-empty" class="inspector-empty">
+        <svg width="34" height="34" viewBox="0 0 34 34" fill="none" opacity="0.35">
+          <rect x="3" y="6" width="28" height="20" rx="3" stroke="currentColor" stroke-width="1.6"/>
+          <path d="M3 12h28" stroke="currentColor" stroke-width="1.6"/>
+        </svg>
+        <p>Select a frame to edit its details</p>
+      </div>
+
+      <div id="inspector-content" class="inspector-content hidden">
+        <div class="field">
+          <label>Title</label>
+          <input type="text" id="insp-title" maxlength="60" placeholder="Frame title">
+        </div>
+
+        <div class="field" id="insp-color-field">
+          <label>Tag color</label>
+          <div class="swatch-row" id="insp-swatches"></div>
+        </div>
+
+        <div class="field field-grid">
+          <div><label>X</label><input type="number" id="insp-x"></div>
+          <div><label>Y</label><input type="number" id="insp-y"></div>
+          <div><label>W</label><input type="number" id="insp-w"></div>
+          <div><label>H</label><input type="number" id="insp-h"></div>
+        </div>
+
+        <div class="field">
+          <label>Notes</label>
+          <textarea id="insp-notes" rows="4" placeholder="Director's notes, camera, dialogue…"></textarea>
+        </div>
+
+        <button id="btn-delete-frame" class="btn-block danger">Delete Frame</button>
+      </div>
+    </aside>
+
+  </div>
+</div>
+
+<!-- Hidden file inputs -->
+<input type="file" id="image-input" accept="image/*" hidden>
+<input type="file" id="import-input" accept="application/json" hidden>
+
+<!-- UI overlays -->
+<div id="toast" role="status" aria-live="polite"></div>
+<div id="tooltip" role="tooltip"></div>
+
+<script src="scripts/loom-markdown.js"></script>
+<script src="scripts/app.js"></script>
+<script src="scripts/theme-switcher.js"></script>
+</body>
+</html>
