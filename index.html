@@ -212,8 +212,9 @@
   <div id="toast" role="status" aria-live="polite"></div>
   <div id="tooltip" role="tooltip"></div>
 
-  <script src="scripts/loom-export.js"></script>
-  <script src="scripts/loom-markdown.js"></script>
+  <script src="assets/scripts/loom-groups.js"></script>
+  <script src="assets/scripts/loom-export.js"></script>
+  <script src="assets/scripts/loom-markdown.js"></script>
   <script>
     (function () {
       const isMobile =
@@ -222,12 +223,12 @@
         /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 
       const script = document.createElement("script");
-      script.src = isMobile ? "scripts/app.mobile.js" : "scripts/app.js";
+      script.src = isMobile ? "assets/scripts/app.mobile.js" : "assets/scripts/app.js";
       script.defer = true;
       document.body.appendChild(script);
     })();
   </script>
-  <script src="scripts/theme-switcher.js"></script>
+  <script src="assets/scripts/theme-switcher.js"></script>
 </body>
 
 </html>
