@@ -8,6 +8,14 @@
   const NOTES_PREVIEW_MARKER = "loom-md-notes-preview";
   const BLOCK_PREVIEW_MARKER = "loom-md-block-preview";
 
+  // Stash placeholders for inline code spans use control characters (\x00…\x01)
+  // so that the italic/bold regexes — which scan for _ and * — can never
+  // accidentally match or corrupt them.  The old @@LOOM_CODE_N@@ form contained
+  // two underscores (LOOM_CODE_) that the italic pattern _…_ would eat.
+  const STASH_OPEN  = "\x00";
+  const STASH_CLOSE = "\x01";
+  const STASH_RE    = /\x00(\d+)\x01/g;
+
   const ALLOWED_PROTOCOLS = new Set(["http:", "https:", "mailto:", "tel:"]);
 
   function escapeHtml(str) {
@@ -51,29 +59,38 @@
   function renderInline(raw) {
     let text = escapeHtml(normalizeText(raw)).replace(/\n/g, "<br>");
 
+    // ── Stash inline code spans ────────────────────────────────────────────
+    // Must happen BEFORE bold/italic so the content inside backticks is never
+    // processed as markdown.  Placeholder uses non-printing control chars so
+    // the italic regex (_…_) cannot match characters inside the key.
     const stash = [];
     text = text.replace(/`([^`]+)`/g, (_, code) => {
       stash.push(`<code>${code}</code>`);
-      return `@@LOOM_CODE_${stash.length - 1}@@`;
+      return `${STASH_OPEN}${stash.length - 1}${STASH_CLOSE}`;
     });
 
+    // ── Links ──────────────────────────────────────────────────────────────
     text = text.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (_, label, href) => {
       const safe = sanitizeUrl(href);
       if (!safe) return `${label} (${href})`;
       return `<a href="${escapeHtml(safe)}" target="_blank" rel="noopener noreferrer">${label}</a>`;
     });
 
+    // ── Emphasis ───────────────────────────────────────────────────────────
     text = text.replace(/\*\*([\s\S]+?)\*\*/g, "<strong>$1</strong>");
-    text = text.replace(/__([\s\S]+?)__/g, "<strong>$1</strong>");
-    text = text.replace(/~~([\s\S]+?)~~/g, "<del>$1</del>");
+    text = text.replace(/__([\s\S]+?)__/g,      "<strong>$1</strong>");
+    text = text.replace(/~~([\s\S]+?)~~/g,       "<del>$1</del>");
     text = text.replace(/\*([\S][\s\S]*?[\S])\*/g, "<em>$1</em>");
-    text = text.replace(/_([\S][\s\S]*?[\S])_/g, "<em>$1</em>");
+    text = text.replace(/_([\S][\s\S]*?[\S])_/g,   "<em>$1</em>");
 
-    text = text.replace(
-      /@@LOOM_CODE_(\d+)@@/g,
-      (_, i) => stash[Number(i)] || "",
-    );
+    // ── Restore stashed code spans ─────────────────────────────────────────
+    text = text.replace(STASH_RE, (_, i) => stash[Number(i)] ?? "");
+
     return text;
+  }
+
+  function renderMarkdownInline(raw) {
+    return renderInline(raw);
   }
 
   function renderBlocks(raw) {
@@ -206,29 +223,10 @@
     return renderBlocks(raw);
   }
 
-  function renderMarkdownInline(raw) {
-    return renderInline(raw);
-  }
-
   /* ====================================================
      SOURCE <-> PREVIEW BINDING
-     ----------------------------------------------------
-     Every markdown-aware field works the same way:
-       - the original editable element ("source") is NEVER
-         rewritten based on render output — its raw value
-         always stays exactly what the user typed.
-       - a sibling "preview" element is created right after
-         it and holds the rendered HTML.
-       - in edit mode the source is shown and the preview is
-         hidden; in view mode it's the reverse.
-     This means rendering can never corrupt, clear, or lose
-     a field's underlying text, no matter how often it runs.
      ==================================================== */
 
-  // Keeps track of every bound source element + the function
-  // that refreshes its preview, so callers can force an update
-  // (e.g. after a value was set programmatically) without
-  // waiting for a native input/change event.
   const registry = [];
 
   function register(sourceEl, update) {
@@ -301,6 +299,25 @@
     update();
   }
 
+  // ── Extract the visible text from a contenteditable element ───────────────
+  // contenteditable stores new lines as <br> or wrapped <div>/<p> elements.
+  // el.textContent collapses all of these into one unbroken string, losing
+  // every newline the user typed.  el.innerText reconstructs the visual
+  // rendering (honouring <br> and block boundaries) so we get real \n chars.
+  // We fall back to a manual extraction if innerText is somehow unavailable.
+  function getEditableText(el) {
+    if ("innerText" in el) return el.innerText;
+    // Manual fallback: clone the node and substitute \n for breaks/blocks.
+    const clone = el.cloneNode(true);
+    clone.querySelectorAll("br").forEach((br) =>
+      br.replaceWith(document.createTextNode("\n")),
+    );
+    clone.querySelectorAll("div, p").forEach((block) => {
+      if (block !== clone) block.prepend(document.createTextNode("\n"));
+    });
+    return clone.textContent;
+  }
+
   function syncBlockText(el) {
     if (!el || el.classList.contains(PREVIEW_MARKER)) return;
     if (el.dataset.loomMarkdownBound === "1") return;
@@ -309,10 +326,10 @@
 
     const preview = ensurePreviewAfter(el, BLOCK_PREVIEW_MARKER);
 
-    // The source element's raw text is the single source of
-    // truth — we only ever *read* it, never write to it here.
+    // The source element's raw text is the single source of truth —
+    // we only ever *read* it, never write to it here.
     const update = () => {
-      preview.innerHTML = renderMarkdown(el.textContent || "");
+      preview.innerHTML = renderMarkdown(getEditableText(el));
     };
 
     el.addEventListener("input", update);
@@ -330,21 +347,21 @@
       if (!source || !source.classList.contains(SOURCE_MARKER)) return;
 
       if (visible) {
-        source.style.position = "absolute";
-        source.style.opacity = "0";
+        source.style.position    = "absolute";
+        source.style.opacity     = "0";
         source.style.pointerEvents = "none";
-        source.style.width = "0";
-        source.style.height = "0";
-        source.style.overflow = "hidden";
+        source.style.width       = "0";
+        source.style.height      = "0";
+        source.style.overflow    = "hidden";
 
         preview.style.display = "";
       } else {
-        source.style.position = "";
-        source.style.opacity = "";
+        source.style.position    = "";
+        source.style.opacity     = "";
         source.style.pointerEvents = "";
-        source.style.width = "";
-        source.style.height = "";
-        source.style.overflow = "";
+        source.style.width       = "";
+        source.style.height      = "";
+        source.style.overflow    = "";
 
         preview.style.display = "none";
       }
