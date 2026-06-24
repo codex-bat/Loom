@@ -2203,7 +2203,7 @@
       textEl.addEventListener("pointerdown", (e) => e.stopPropagation());
       textEl.addEventListener("input", () => {
         if (mode === "view") return;
-        block.data.text = textEl.textContent;
+        block.data.text = "innerText" in textEl ? textEl.innerText : textEl.textContent;
         pushHistoryDebounced();
         save();
       });
