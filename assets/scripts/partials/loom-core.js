@@ -291,6 +291,35 @@ function syncMarkdownPreviews() {
 }
 
 /* ====================================================
+     NEW GROUP FUNCTIONALY (BORDERS, UNLOAD)
+     ========================================================== */
+function getGroup(id) {
+  return state.groups.find((g) => g.id === id);
+}
+
+function isCardHidden(card) {
+  if (!card.groupId) return false;
+  var group = getGroup(card.groupId);
+  return group ? !!group.hidden : false;
+}
+
+function getGroupCardsBounds(group) {
+  var cards = state.cards.filter((c) => c.groupId === group.id);
+  if (cards.length === 0) return null;
+  var minX = Infinity,
+    minY = Infinity,
+    maxX = -Infinity,
+    maxY = -Infinity;
+  cards.forEach(function (c) {
+    minX = Math.min(minX, c.x);
+    minY = Math.min(minY, c.y);
+    maxX = Math.max(maxX, c.x + c.w);
+    maxY = Math.max(maxY, c.y + c.h);
+  });
+  return { minX, minY, maxX, maxY };
+}
+
+/* ====================================================
      PERSIST
      ==================================================== */
 function save() {
@@ -310,6 +339,12 @@ function load() {
         state = Object.assign(DEFAULT_STATE(), parsed);
         if (!Array.isArray(state.connections)) state.connections = [];
         if (!Array.isArray(state.groups)) state.groups = [];
+        if (Array.isArray(state.groups)) {
+          state.groups.forEach(function (g) {
+            g.hidden = g.hidden === true;
+            g.showBorder = g.showBorder === true;
+          });
+        }
         state.cards = state.cards.map(normalizeCard);
         state.connections = state.connections.map(normalizeConnection);
         state.layout = normalizeLayout(state.layout);
@@ -574,7 +609,10 @@ function initModeDropdown() {
     if (!e.target.closest("#mode-dropdown")) closeModeDropdown();
   });
   document.addEventListener("keydown", (e) => {
-    if (e.key === "Escape") closeModeDropdown();
+    if (e.key === "Escape") {
+      closeModeDropdown();
+      closeGroupContextMenu();
+    }
   });
 }
 
@@ -1271,6 +1309,17 @@ function onConnDragUp() {
         layer: "front",
       };
       state.connections.push(linkedConn);
+
+      // Inherit group from parent to child and descendants
+      if (fromCard && toCard) {
+        var parentGroup = fromCard.groupId;
+        var childAndDescendants = [toCard.id, ...getAllDescendants(toCard.id)];
+        childAndDescendants.forEach(function (id) {
+          var c = getCard(id);
+          if (c) c.groupId = parentGroup;
+        });
+      }
+
       renderFrameList();
       pushHistory();
       save();
@@ -1491,12 +1540,14 @@ function renderConnections() {
     var from = getCard(conn.fromId);
     var to = getCard(conn.toId);
     if (!from || !to) return;
+    if (isCardHidden(from) || isCardHidden(to)) return;
     var targetSvg = conn.layer === "back" && $svgBack ? $svgBack : $svg;
     if (settleAnim && settleAnim.connId === conn.id)
       renderSettlingString(conn, from, to, targetSvg);
     else renderStaticString(conn, from, to, targetSvg);
   });
   if (connDrag) renderDragString();
+  renderGroupBorders();
 }
 
 /* ====================================================
@@ -1524,7 +1575,6 @@ function buildConnMenuItem({ label, active, disabled, onClick }) {
   btn.className = "conn-context-menu-item" + (active ? " active" : "");
   btn.disabled = !!disabled;
   btn.innerHTML = `
-      <span class="conn-context-menu-dot"></span>
       <span class="conn-context-menu-label">${escapeHtml(label)}</span>
       <span class="conn-context-menu-check">✓</span>
     `;
@@ -1550,6 +1600,10 @@ function setConnLayer(connId, layer) {
 function setAllConnLayers(layer) {
   var normalized = layer === "back" ? "back" : "front";
   state.connections.forEach((c) => {
+    var from = getCard(c.fromId);
+    var to = getCard(c.toId);
+    if (!from || !to) return;
+    if (isCardHidden(from) || isCardHidden(to)) return; // skip hidden cards - shush, don't tell anyone it's not actually being entirely efficient
     c.layer = normalized;
   });
   renderConnections();
@@ -1557,8 +1611,8 @@ function setAllConnLayers(layer) {
   save();
   toast(
     normalized === "back"
-      ? "All strings sent behind frames"
-      : "All strings brought in front of frames",
+      ? "All visible strings sent behind frames"
+      : "All visible strings brought in front of frames",
   );
 }
 
@@ -1612,10 +1666,22 @@ function initConnContextMenu() {
   window.addEventListener(
     "pointerdown",
     (e) => {
-      if (!$connContextMenu) return;
-      if (!$connContextMenu.classList.contains("open")) return;
-      if (e.target.closest(".conn-context-menu")) return;
-      closeConnContextMenu();
+      // Close connection menu if click outside
+      if (
+        $connContextMenu &&
+        $connContextMenu.classList.contains("open") &&
+        !e.target.closest(".conn-context-menu")
+      ) {
+        closeConnContextMenu();
+      }
+      // Close group menu if click outside
+      if (
+        $groupContextMenu &&
+        $groupContextMenu.classList.contains("open") &&
+        !e.target.closest(".group-context-menu")
+      ) {
+        closeGroupContextMenu();
+      }
     },
     true,
   );
