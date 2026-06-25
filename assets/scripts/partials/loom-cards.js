@@ -5,28 +5,34 @@
 // variables
 var previewAll = false; // start with normal edit view
 var frameListDrag = null;
+var $groupContextMenu = null;
+var previewCardIds = new Set();
 
 function toggleAllPreviews() {
-  var cards = $world.querySelectorAll(".card");
-  var previewCount = 0;
-  cards.forEach(function (el) {
-    if (el.classList.contains("card-preview")) previewCount++;
+  var visibleCards = $world.querySelectorAll(".card");
+  var anyPreview = false;
+
+  // check if any visible card currently has preview
+  visibleCards.forEach(function (el) {
+    if (el.classList.contains("card-preview")) anyPreview = true;
   });
 
-  if (previewCount > 2) {
-    // turn all previews off
-    cards.forEach(function (el) {
+  if (anyPreview) {
+    // turn all visible previews off
+    visibleCards.forEach(function (el) {
       el.classList.remove("card-preview");
+      previewCardIds.delete(el.dataset.cardId);
     });
     previewAll = false;
-    toast("Preview mode OFF for all frames");
+    toast("Preview mode OFF for all visible frames");
   } else {
-    // turn all previews on
-    cards.forEach(function (el) {
+    // turn all visible previews on
+    visibleCards.forEach(function (el) {
       el.classList.add("card-preview");
+      previewCardIds.add(el.dataset.cardId);
     });
     previewAll = true;
-    toast("Preview mode ON for all frames");
+    toast("Preview mode ON for all visible frames");
   }
 }
 
@@ -102,6 +108,7 @@ function deleteCard(id) {
   renderAll();
   pushHistory();
   save();
+  previewCardIds.delete(id);
 }
 
 function deleteSelectedCards() {
@@ -116,6 +123,7 @@ function deleteSelectedCards() {
   renderAll();
   pushHistory();
   save();
+  previewCardIds.delete(id);
 }
 
 function cardRectInCanvasSpace(el) {
@@ -131,13 +139,17 @@ function cardRectInCanvasSpace(el) {
 
 function createGroup() {
   if (mode === "view") return;
+
   var group = {
     id: uid(),
     name: "New Group",
     collapsed: false,
+    hidden: false,
+    showBorder: false,
     color: null,
     order: state.groups.length,
   };
+
   state.groups.push(group);
   renderFrameList();
   pushHistory();
@@ -303,6 +315,10 @@ function buildCardEl(card, num) {
   header.addEventListener("click", () => selectCard(card.id));
   handle.addEventListener("pointerdown", (e) => startResizeCard(e, card, el));
 
+  if (previewCardIds.has(card.id)) {
+    el.classList.add("card-preview");
+  }
+
   return el;
 }
 
@@ -344,7 +360,13 @@ function makePreviewToggle(card) {
     e.stopPropagation();
     var cardEl = e.target.closest(".card");
     if (!cardEl) return;
-    cardEl.classList.toggle("card-preview");
+    var id = cardEl.dataset.cardId;
+    var hasPreview = cardEl.classList.toggle("card-preview");
+    if (hasPreview) {
+      previewCardIds.add(id);
+    } else {
+      previewCardIds.delete(id);
+    }
   });
   return btn;
 }
@@ -855,18 +877,22 @@ function renderFrameList() {
   $emptyFrames.classList.toggle("show", state.cards.length === 0);
 
   // ── Add group button ─────────────────
-  var addGroupBtn = document.createElement("button");
-  addGroupBtn.className = "frame-group-add-btn";
-  addGroupBtn.innerHTML = "+";
-  addGroupBtn.title = "Create new group";
-  addGroupBtn.addEventListener("click", createGroup);
   if (mode === "view") addGroupBtn.disabled = true;
   var header = document.createElement("div");
-  header.className = "frame-list-header"; // new class
+  header.className = "frame-list-header";
+  header.style.display = "flex";
+  header.style.alignItems = "center";
+  header.style.justifyContent = "space-between"; // keeps label left, button right
 
   var label = document.createElement("span");
   label.className = "panel-label"; // reuse the existing label style
   label.textContent = "Frames";
+
+  var addGroupBtn = document.createElement("button");
+  addGroupBtn.className = "frame-group-add-btn";
+  addGroupBtn.innerHTML = "+";
+  addGroupBtn.dataset.tooltip = "Create new group";
+  addGroupBtn.addEventListener("click", createGroup);
 
   header.appendChild(label);
   header.appendChild(addGroupBtn);
@@ -927,12 +953,13 @@ function renderFrameList() {
       if (!group.collapsed) {
         // Expanded: render the frames
         groupTopCards.forEach((c) => renderNode(c.id, 1));
+        // ensure any missed ones are rendered
         groupTopCards.forEach((c) => {
           if (!visited.has(c.id)) renderNode(c.id, 1);
         });
       } else {
-        // Collapsed: mark all frames in this group and their descendants as visited,
         // so they are not rendered later as ungrouped.
+        // collapsed OR hidden: mark all as visited so they don't appear later
         var allIds = [];
         groupTopCards.forEach((c) => {
           allIds.push(c.id);
@@ -1041,20 +1068,27 @@ function getAllDescendants(cardId) {
 
 function buildGroupRow(group, count) {
   var row = document.createElement("div");
-  row.className = "frame-group-row";
+  row.className = "frame-group-row" + (group.hidden ? " group-hidden" : "");
   row.dataset.groupId = group.id;
-  row.draggable = false; // we'll make it draggable only from the handle
+  row.draggable = false;
 
-  // ── Collapse toggle ────────────────────
+  // Collapse togg
   var toggle = document.createElement("span");
   toggle.className = "group-collapse-toggle";
-  toggle.textContent = group.collapsed ? "▶" : "▼";
+  toggle.setAttribute("aria-hidden", "true");
+  toggle.innerHTML = `<svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+    <path d="M2 4l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+  </svg>`;
+  if (group.collapsed) toggle.classList.add("collapsed");
   toggle.addEventListener("click", (e) => {
     e.stopPropagation();
     toggleGroupCollapse(group.id);
   });
 
-  // ── Drag handle (grip) ─────────────────
+  // if hidden also add the collapsed class
+  if (group.collapsed || group.hidden) toggle.classList.add("collapsed");
+
+  // Drag handle
   var dragHandle = document.createElement("span");
   dragHandle.className = "group-drag-handle";
   dragHandle.innerHTML = `
@@ -1066,13 +1100,13 @@ function buildGroupRow(group, count) {
   dragHandle.setAttribute("aria-label", "Drag to reorder group");
   dragHandle.addEventListener("pointerdown", (e) => {
     e.stopPropagation();
-    row.draggable = true; // enable dragging only when grip is used
+    row.draggable = true;
   });
   dragHandle.addEventListener("pointerup", () => {
     row.draggable = false;
   });
 
-  // ── Group name input ──────────────────
+  // Name input
   var nameInput = document.createElement("input");
   nameInput.type = "text";
   nameInput.className = "group-name-input";
@@ -1084,31 +1118,76 @@ function buildGroupRow(group, count) {
   );
   nameInput.addEventListener("pointerdown", (e) => e.stopPropagation());
 
-  // ── Delete button (no popup, square shape) ──
-  var delBtn = document.createElement("button");
-  delBtn.type = "button";
-  delBtn.className = "group-delete-btn";
-  delBtn.innerHTML = "×";
-  delBtn.setAttribute("aria-label", "Delete group");
-  delBtn.addEventListener("click", (e) => {
-    e.stopPropagation();
-    deleteGroup(group.id); // no confirm – just degroup and remove
-  });
-
-  // ── Item count (larger) ──────────────
+  // Count
   var countSpan = document.createElement("span");
   countSpan.className = "group-count";
-  countSpan.textContent = count; // just the number (no parentheses)
+  countSpan.textContent = count;
 
-  // Assemble row
+  // ---- New buttons (replace delete button) ----
+  // ── Border toggle button (styled like topbar icon button) ──
+  var borderBtn = document.createElement("button");
+  borderBtn.type = "button";
+  borderBtn.className = "group-action-btn";
+  borderBtn.dataset.tooltip = "Toggle group border highlight";
+  borderBtn.innerHTML = `
+  <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+    <rect x="2" y="2" width="12" height="12" rx="2" stroke="currentColor" stroke-width="1.5" stroke-dasharray="2 2"/>
+  </svg>`;
+  borderBtn.addEventListener("click", function (e) {
+    e.stopPropagation();
+    group.showBorder = !group.showBorder;
+    pushHistory();
+    save();
+    renderAll();
+  });
+
+  // ── Hide / Show toggle button (eye icon with slash when visible, eye only when hidden) ──
+  var hideBtn = document.createElement("button");
+  hideBtn.type = "button";
+  hideBtn.className = "group-action-btn";
+  hideBtn.dataset.tooltip = group.hidden
+    ? "Show group frames"
+    : "Hide group frames";
+  hideBtn.innerHTML = group.hidden
+    ? `<svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M1 8s2.5-5 7-5 7 5 7 5-2.5 5-7 5-7-5-7-5z" stroke="currentColor" stroke-width="1.5"/><circle cx="8" cy="8" r="2.5" fill="currentColor"/></svg>`
+    : `<svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M1 8s2.5-5 7-5 7 5 7 5-2.5 5-7 5-7-5-7-5z" stroke="currentColor" stroke-width="1.5"/><circle cx="8" cy="8" r="2.5" fill="currentColor"/><line x1="2" y1="14" x2="14" y2="2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>`;
+  hideBtn.addEventListener("click", function (e) {
+    e.stopPropagation();
+    group.hidden = !group.hidden;
+    if (group.hidden) {
+      group.collapsed = true;
+      group.showBorder = false;
+    } else {
+      group.collapsed = false;
+    }
+    pushHistory();
+    save();
+    renderAll();
+  });
+
+  // Assemble row (note: delete button is gone)
   row.appendChild(toggle);
   row.appendChild(dragHandle);
   row.appendChild(nameInput);
   row.appendChild(countSpan);
-  row.appendChild(delBtn);
+  row.appendChild(borderBtn);
+  row.appendChild(hideBtn);
 
-  // ── Drag events for reordering ────────
+  // ---- Right‑click context menu ----
+  row.addEventListener("contextmenu", function (e) {
+    e.preventDefault();
+    e.stopPropagation();
+    if (mode === "view") return;
+    if (group.hidden) return;
+    openGroupContextMenu(e, group);
+  });
+
+  // Drag‑and‑drop for reordering`
   row.addEventListener("dragstart", (e) => {
+    if (group.hidden) {
+      e.preventDefault();
+      return;
+    }
     e.dataTransfer.setData("application/loom-group", group.id);
     e.dataTransfer.effectAllowed = "move";
     row.classList.add("dragging");
@@ -1118,7 +1197,7 @@ function buildGroupRow(group, count) {
     row.draggable = false;
   });
 
-  // Still allow frame drops onto this group row
+  // Frame drop onto group row
   row.addEventListener("dragover", (e) => {
     e.preventDefault();
     row.classList.add("drag-over");
@@ -1130,30 +1209,22 @@ function buildGroupRow(group, count) {
     e.preventDefault();
     var cardId = e.dataTransfer.getData("text/plain");
     if (cardId) {
-      // This is a frame drop – handle it and stop propagation
       e.stopPropagation();
       row.classList.remove("drag-over");
       var rootCard = getCard(cardId);
       if (!rootCard) return;
-
-      // 0. If the frame is already in this group, notify and do nothing
       if (rootCard.groupId === group.id) {
         toast("Frame already belongs to this group");
         return;
       }
-
-      // 1. Remove any incoming connection (parent → this frame)
       state.connections = state.connections.filter(function (c) {
         return c.toId !== cardId;
       });
-
-      // 2. Move the frame and all descendants
       var descendantIds = getAllDescendants(cardId);
       [cardId].concat(descendantIds).forEach(function (id) {
         var c = getCard(id);
         if (c) c.groupId = group.id;
       });
-
       renderFrameList();
       renderConnections();
       pushHistory();
@@ -1169,8 +1240,28 @@ function buildGroupRow(group, count) {
           '"',
       );
     }
-    // If no cardId, it's a group drop – let it bubble to $frameList
   });
+
+  if (group.hidden) {
+    // collapse toggle – no clicks, visually dim
+    toggle.style.pointerEvents = "none";
+    toggle.style.opacity = "0.3";
+
+    // drag handle – no drag
+    dragHandle.style.pointerEvents = "none";
+    row.draggable = false;
+
+    // name input – read‑only
+    nameInput.readOnly = true;
+    nameInput.style.pointerEvents = "none";
+
+    // border button – disabled
+    borderBtn.disabled = true;
+    borderBtn.style.pointerEvents = "none";
+    borderBtn.classList.add("disabled");
+
+    // hide button remains active (do nothing to it)
+  }
 
   return row;
 }
@@ -1190,6 +1281,144 @@ function panToCard(card) {
   state.view.y = rect.height / 2 - (card.y + card.h / 2) * state.view.scale;
   applyView();
   save();
+}
+
+function ensureGroupContextMenu() {
+  if ($groupContextMenu) return $groupContextMenu;
+  var menu = document.createElement("div");
+  menu.className = "group-context-menu";
+  menu.setAttribute("role", "menu");
+  menu.addEventListener("contextmenu", (e) => e.preventDefault());
+  document.body.appendChild(menu);
+  $groupContextMenu = menu;
+  return menu;
+}
+
+function openGroupContextMenu(e, group) {
+  var menu = ensureGroupContextMenu();
+  menu.innerHTML = "";
+
+  // Hide / Show frames
+  menu.appendChild(
+    buildGroupMenuItem({
+      label: group.hidden ? "Show Frames" : "Hide Frames",
+      onClick: function () {
+        group.hidden = !group.hidden;
+        if (group.hidden) {
+          group.collapsed = true;
+          group.showBorder = false;
+        } else {
+          group.collapsed = false;
+        }
+        pushHistory();
+        save();
+        renderAll();
+      },
+    }),
+  );
+
+  // Toggle borders
+  menu.appendChild(
+    buildGroupMenuItem({
+      label: group.showBorder ? "Hide Borders" : "Show Borders",
+      onClick: function () {
+        group.showBorder = !group.showBorder;
+        pushHistory();
+        save();
+        renderAll();
+      },
+    }),
+  );
+
+  // Divider
+  var divider = document.createElement("div");
+  divider.className = "group-context-menu-divider";
+  menu.appendChild(divider);
+
+  // Delete – reddish colour
+  menu.appendChild(
+    buildGroupMenuItem({
+      label: "Delete Group",
+      danger: true,
+      onClick: function () {
+        deleteGroup(group.id);
+      },
+    }),
+  );
+
+  menu.style.left = e.clientX + "px";
+  menu.style.top = e.clientY + "px";
+  menu.classList.add("open");
+
+  // Keep inside viewport
+  var rect = menu.getBoundingClientRect();
+  var vw = window.innerWidth;
+  var vh = window.innerHeight;
+  var x = e.clientX,
+    y = e.clientY;
+  if (rect.right > vw - 8) x = Math.max(8, vw - rect.width - 8);
+  if (rect.bottom > vh - 8) y = Math.max(8, vh - rect.height - 8);
+  menu.style.left = x + "px";
+  menu.style.top = y + "px";
+}
+
+function buildGroupMenuItem({ label, danger, onClick }) {
+  var btn = document.createElement("button");
+  btn.type = "button";
+  btn.className = "group-context-menu-item" + (danger ? " danger" : "");
+  btn.setAttribute("role", "menuitem");
+  btn.innerHTML = "<span>" + escapeHtml(label) + "</span>";
+  btn.addEventListener("click", function (e) {
+    e.stopPropagation();
+    onClick();
+    closeGroupContextMenu();
+  });
+  return btn;
+}
+
+function closeGroupContextMenu() {
+  if ($groupContextMenu) $groupContextMenu.classList.remove("open");
+}
+
+function renderGroupBorders() {
+  if (!$svgBack) return;
+  // Remove old borders
+  $svgBack.querySelectorAll(".group-border").forEach(function (el) {
+    el.remove();
+  });
+
+  state.groups.forEach(function (group) {
+    if (!group.showBorder) return;
+    var bounds = getGroupCardsBounds(group);
+    if (!bounds) return;
+    var pad = 12;
+    var x = bounds.minX - pad;
+    var y = bounds.minY - pad;
+    var w = bounds.maxX - bounds.minX + pad * 2;
+    var h = bounds.maxY - bounds.minY + pad * 2;
+    var color = group.color || "var(--accent)";
+
+    var g = svgEl("g");
+    g.classList.add("group-border");
+    g.setAttribute("data-group-id", group.id);
+    g.appendChild(
+      svgEl("rect", {
+        x: x,
+        y: y,
+        width: w,
+        height: h,
+        rx: 12,
+        ry: 12,
+        fill: "none",
+        stroke: color,
+        "stroke-width": "2",
+        "stroke-dasharray": "8 4",
+        "stroke-opacity": "0.55",
+        "pointer-events": "none",
+      }),
+    );
+    $svgBack.appendChild(g);
+  });
 }
 
 /* ====================================================
