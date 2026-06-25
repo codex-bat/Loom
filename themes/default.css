@@ -1004,6 +1004,239 @@ body.view-mode .frame-line-btn {
   filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.35));
 }
 
+.card-preview-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--ink-faint);
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity .15s ease, background .12s ease, color .12s ease;
+  flex-shrink: 0;
+}
+
+.card:hover .card-preview-toggle,
+.card.selected .card-preview-toggle {
+  opacity: 1;
+}
+
+.card-preview-toggle:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--ink);
+}
+
+.card-preview-toggle:active {
+  transform: scale(0.92);
+}
+
+/* Hide editing UI when preview toggled */
+.card.card-preview .card-toolbar,
+.card.card-preview .resize-handle,
+.card.card-preview .block-controls,
+.card.card-preview .card-pin-btn,
+.card.card-preview .block-link-input {
+  display: none !important;
+}
+
+/* Show markdown preview, hide markdown source */
+.card.card-preview .loom-md-source {
+  display: none !important;
+}
+
+.card.card-preview .loom-md-preview {
+  display: block !important;
+}
+
+/* Group row */
+.frame-group-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 8px;
+  margin: 4px 0;
+  background: var(--panel-border);
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  color: var(--ink-dim);
+  cursor: default;
+  transition: background .12s ease;
+}
+
+.frame-group-row.drag-over {
+  background: var(--accent-dim);
+}
+
+.group-collapse-toggle {
+  cursor: pointer;
+  width: 14px;
+  text-align: center;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--ink-faint);
+}
+
+/* ─── Group name – shrink to fit, ellipsis ─── */
+.group-name-input {
+  flex: 1 1 auto;
+  min-width: 0;
+  max-width: 140px;
+  /* stops it from gobbling the whole row */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  background: transparent;
+  border: none;
+  color: var(--ink);
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 13px;
+  outline: none;
+  padding: 0;
+}
+
+/* ─── Prevent horizontal overflow in the sequencer ─── */
+.panel-section {
+  overflow-x: hidden;
+  /* no more horizontal scrollbar */
+}
+
+/* ─── Ensure group row stays on one line ─── */
+.frame-group-row {
+  flex-wrap: nowrap;
+  overflow: hidden;
+}
+
+.group-count {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--ink-faint);
+}
+
+.group-delete {
+  opacity: 0;
+  width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  color: var(--ink-faint);
+  cursor: pointer;
+  transition: opacity .12s ease, background .12s ease;
+}
+
+.frame-group-row:hover .group-delete {
+  opacity: 1;
+}
+
+.group-delete:hover {
+  background: var(--danger-dim);
+  color: var(--danger);
+}
+
+/* Add‑group button */
+.frame-group-add-btn {
+  align-self: flex-end;
+  background: var(--accent-dim);
+  border: 1px solid rgba(var(--accent-rgb), 0.25);
+  color: var(--accent);
+  font-size: 16px;
+  line-height: 1;
+  width: 26px;
+  height: 26px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  margin-bottom: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  transition: background .12s ease;
+}
+
+.frame-group-add-btn:hover {
+  background: rgba(var(--accent-rgb), 0.26);
+}
+
+/* Square delete button */
+.group-delete-btn {
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--ink-faint);
+  font-size: 18px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity .12s ease, background .12s ease, color .12s ease;
+  flex-shrink: 0;
+}
+
+.frame-group-row:hover .group-delete-btn {
+  opacity: 1;
+}
+
+.group-delete-btn:hover {
+  background: var(--danger-dim);
+  color: var(--danger);
+}
+
+/* Larger item count */
+.group-count {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  /* larger */
+  font-weight: 600;
+  color: var(--ink-dim);
+  min-width: 24px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+/* Drag handle (grip) */
+.group-drag-handle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  color: var(--ink-faint);
+  cursor: grab;
+  flex-shrink: 0;
+  opacity: 0;
+  transition: opacity .12s ease;
+}
+
+.frame-group-row:hover .group-drag-handle {
+  opacity: 1;
+}
+
+.group-drag-handle:active {
+  cursor: grabbing;
+}
+
+/* Group row dragging state */
+.frame-group-row.dragging {
+  opacity: 0.4;
+}
+
+#left-panel>.panel-label {
+  display: none;
+  /* hide the old label, header will replace it */
+}
+
 .card-body {
   flex: 1;
   overflow-y: auto;
