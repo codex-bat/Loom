@@ -1068,17 +1068,110 @@ body.view-mode .frame-line-btn {
   transition: background .12s ease;
 }
 
+/* Group row hidden state */
+.frame-group-row.group-hidden {
+  opacity: 0.5;
+}
+
+.frame-group-row:hover .group-border-btn,
+.frame-group-row:hover .group-hide-btn {
+  opacity: 1;
+}
+
+.group-border-btn:hover,
+.group-hide-btn:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--ink);
+}
+
+.group-action-btn.disabled,
+.group-action-btn:disabled {
+  opacity: 0.35;
+  pointer-events: none;
+  cursor: default;
+}
+
+/* Group context menu */
+.group-context-menu {
+  position: fixed;
+  z-index: 300;
+  background: var(--panel-solid);
+  border: 1px solid rgba(255, 255, 255, 0.11);
+  border-radius: var(--radius-sm);
+  margin: 0;
+  padding: 4px;
+  min-width: 198px;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.55), 0 1px 0 rgba(255, 255, 255, 0.04) inset;
+  opacity: 0;
+  transform: translateY(-6px) scale(0.97);
+  pointer-events: none;
+  transition: opacity .15s ease, transform .15s ease;
+}
+
+.group-context-menu.open {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  pointer-events: all;
+}
+
+.group-context-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  padding: 8px 10px;
+  border-radius: 5px;
+  border: none;
+  background: transparent;
+  font-family: var(--font-body);
+  font-size: 12.5px;
+  text-align: left;
+  cursor: pointer;
+  color: var(--ink-dim);
+  transition: background .1s ease, color .1s ease;
+}
+
+.group-context-menu-item:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--ink);
+}
+
+.group-context-menu-item.danger:hover {
+  background: var(--danger-dim);
+  color: var(--danger);
+}
+
+.group-context-menu-divider {
+  height: 1px;
+  background: var(--panel-border);
+  margin: 4px 6px;
+}
+
 .frame-group-row.drag-over {
   background: var(--accent-dim);
 }
 
 .group-collapse-toggle {
   cursor: pointer;
-  width: 14px;
-  text-align: center;
-  font-family: var(--font-mono);
-  font-size: 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
   color: var(--ink-faint);
+  transition: transform .18s ease, color .15s ease;
+  /* Expanded: chevron points down */
+  transform: rotate(0deg);
+}
+
+.group-collapse-toggle:hover {
+  color: var(--ink);
+}
+
+.group-collapse-toggle.collapsed {
+  /* Collapsed: chevron points right */
+  transform: rotate(-90deg);
 }
 
 /* ─── Group name – shrink to fit, ellipsis ─── */
@@ -1140,9 +1233,38 @@ body.view-mode .frame-line-btn {
   color: var(--danger);
 }
 
+.group-action-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--ink-dim);
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity .12s ease,
+    background .12s ease,
+    color .12s ease,
+    border-color .12s ease;
+  flex-shrink: 0;
+}
+
+.frame-group-row:hover .group-action-btn {
+  opacity: 1;
+}
+
+.group-action-btn:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.1);
+  color: var(--ink);
+}
+
 /* Add‑group button */
 .frame-group-add-btn {
-  align-self: flex-end;
   background: var(--accent-dim);
   border: 1px solid rgba(var(--accent-rgb), 0.25);
   color: var(--accent);
@@ -1152,7 +1274,6 @@ body.view-mode .frame-line-btn {
   height: 26px;
   border-radius: var(--radius-sm);
   cursor: pointer;
-  margin-bottom: 6px;
   display: flex;
   align-items: center;
   justify-content: center;
