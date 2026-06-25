@@ -33,6 +33,7 @@
       </a>
     </div>
   </header>
+
   <div class="docs-layout">
 
     <aside class="docs-sidebar" aria-label="Documentation navigation">
@@ -62,6 +63,9 @@
           <a href="#frame-list" class="docs-nav-link">
             <span class="docs-nav-dot"></span>Frame List
           </a>
+          <a href="#groups" class="docs-nav-link">
+            <span class="docs-nav-dot"></span>Groups
+          </a>
           <a href="#inspector" class="docs-nav-link">
             <span class="docs-nav-dot"></span>Inspector
           </a>
@@ -71,6 +75,9 @@
         <div class="docs-nav-section">
           <a href="#modes" class="docs-nav-link">
             <span class="docs-nav-dot"></span>Edit &amp; View Modes
+          </a>
+          <a href="#preview" class="docs-nav-link">
+            <span class="docs-nav-dot"></span>Frame Preview
           </a>
           <a href="#undo-redo" class="docs-nav-link">
             <span class="docs-nav-dot"></span>Undo &amp; Redo
@@ -108,18 +115,15 @@
 
         <div class="docs-hero-figure" aria-hidden="true">
           <svg width="248" height="172" viewBox="0 0 248 172" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <!-- Background -->
             <rect width="248" height="172" rx="12" fill="#1a1d24"/>
-            <!-- Grid dots (subtle) -->
             <pattern id="grid" x="0" y="0" width="16" height="16" patternUnits="userSpaceOnUse">
               <circle cx="8" cy="8" r="0.8" fill="rgba(167,182,210,0.1)"/>
             </pattern>
             <rect width="248" height="172" rx="12" fill="url(#grid)"/>
-            <!-- World origin orb -->
             <circle cx="16" cy="86" r="16" fill="rgba(111,227,200,0.045)"/>
             <circle cx="16" cy="86" r="8"  fill="rgba(111,227,200,0.1)"/>
             <circle cx="16" cy="86" r="2.8" fill="rgba(111,227,200,0.5)"/>
-            <!-- ── Frame 1 (teal) ── -->
+            <!-- Frame 1 (teal) -->
             <rect x="28" y="54" width="84" height="64" rx="7" fill="#21252d" stroke="rgba(111,227,200,0.45)" stroke-width="1.2"/>
             <rect x="28" y="54" width="3.5" height="64" rx="1.75" fill="#6fe3c8"/>
             <rect x="36" y="62" width="12" height="9" rx="2.5" fill="rgba(255,255,255,0.09)"/>
@@ -128,7 +132,7 @@
             <rect x="36" y="86" width="48" height="3" rx="1.5" fill="rgba(255,255,255,0.07)"/>
             <rect x="36" y="94" width="54" height="3" rx="1.5" fill="rgba(255,255,255,0.07)"/>
             <rect x="36" y="102" width="40" height="3" rx="1.5" fill="rgba(255,255,255,0.05)"/>
-            <!-- ── Frame 2 (pink) ── -->
+            <!-- Frame 2 (pink) -->
             <rect x="138" y="10" width="84" height="64" rx="7" fill="#21252d" stroke="rgba(255,123,156,0.4)" stroke-width="1.2"/>
             <rect x="138" y="10" width="3.5" height="64" rx="1.75" fill="#ff7b9c"/>
             <rect x="146" y="18" width="12" height="9" rx="2.5" fill="rgba(255,255,255,0.09)"/>
@@ -137,7 +141,7 @@
             <rect x="146" y="42" width="48" height="3" rx="1.5" fill="rgba(255,255,255,0.07)"/>
             <rect x="146" y="50" width="54" height="3" rx="1.5" fill="rgba(255,255,255,0.07)"/>
             <rect x="146" y="58" width="40" height="3" rx="1.5" fill="rgba(255,255,255,0.05)"/>
-            <!-- ── Frame 3 (amber) ── -->
+            <!-- Frame 3 (amber) -->
             <rect x="138" y="98" width="84" height="64" rx="7" fill="#21252d" stroke="rgba(255,179,107,0.4)" stroke-width="1.2"/>
             <rect x="138" y="98" width="3.5" height="64" rx="1.75" fill="#ffb36b"/>
             <rect x="146" y="106" width="12" height="9" rx="2.5" fill="rgba(255,255,255,0.09)"/>
@@ -146,24 +150,21 @@
             <rect x="146" y="130" width="48" height="3" rx="1.5" fill="rgba(255,255,255,0.07)"/>
             <rect x="146" y="138" width="54" height="3" rx="1.5" fill="rgba(255,255,255,0.07)"/>
             <rect x="146" y="146" width="40" height="3" rx="1.5" fill="rgba(255,255,255,0.05)"/>
-            <!-- ── String 1 → 2 ── -->
+            <!-- String 1 to 2 -->
             <path d="M 70 62 Q 104 22 158 22" stroke="rgba(0,0,0,0.45)" stroke-width="2.2" fill="none" stroke-linecap="round"/>
             <path d="M 70 62 Q 104 22 158 22" stroke="rgba(228,190,112,0.88)" stroke-width="1.5" fill="none" stroke-linecap="round"/>
-            <!-- Tacks string 1→2 -->
             <circle cx="70"  cy="62" r="4"   fill="#9a5e20"/>
             <circle cx="70"  cy="62" r="3.2" fill="#d4893c" stroke="rgba(255,255,255,0.45)" stroke-width="0.9"/>
             <circle cx="68.5" cy="60.5" r="1.1" fill="rgba(255,255,255,0.38)"/>
             <circle cx="158" cy="22" r="4"   fill="#9a5e20"/>
             <circle cx="158" cy="22" r="3.2" fill="#d4893c" stroke="rgba(255,255,255,0.45)" stroke-width="0.9"/>
             <circle cx="156.5" cy="20.5" r="1.1" fill="rgba(255,255,255,0.38)"/>
-            <!-- ── String 1 → 3 ── -->
+            <!-- String 1 to 3 -->
             <path d="M 70 62 Q 104 140 158 110" stroke="rgba(0,0,0,0.45)" stroke-width="2.2" fill="none" stroke-linecap="round"/>
             <path d="M 70 62 Q 104 140 158 110" stroke="rgba(228,190,112,0.88)" stroke-width="1.5" fill="none" stroke-linecap="round"/>
-            <!-- Tack string 1→3 destination -->
             <circle cx="158" cy="110" r="4"   fill="#9a5e20"/>
             <circle cx="158" cy="110" r="3.2" fill="#d4893c" stroke="rgba(255,255,255,0.45)" stroke-width="0.9"/>
             <circle cx="156.5" cy="108.5" r="1.1" fill="rgba(255,255,255,0.38)"/>
-            <!-- Outer border -->
             <rect x="0.6" y="0.6" width="246.8" height="170.8" rx="11.4" stroke="rgba(255,255,255,0.07)" stroke-width="1.2"/>
           </svg>
         </div>
@@ -281,8 +282,8 @@
         <h3>Zooming</h3>
         <p>Scroll the mouse wheel (or trackpad pinch) anywhere on the canvas to zoom in or out. The zoom level is shown as a percentage in the top-right corner of the top bar.</p>
         <ul>
-          <li><strong>F</strong> — Zoom to fit all frames into view.</li>
-          <li><strong>0</strong> — Reset to 100 % zoom centered on the world origin.</li>
+          <li><kbd>F</kbd> — Zoom to fit all <em>visible</em> frames into view. Frames belonging to hidden groups are excluded.</li>
+          <li><kbd>0</kbd> — Reset to 100 % zoom centered on the world origin.</li>
           <li>Zoom range: 15 % – 250 %.</li>
         </ul>
 
@@ -290,10 +291,13 @@
         <p>The point <code>(0, 0)</code> in world space is marked by a subtle glowing orb. Ctrl + Drag snap alignment and X/Y inspector values are all measured relative to this origin. Pressing <kbd>0</kbd> centers the camera on it.</p>
 
         <h3>Grid</h3>
-        <p>The background shows a fine dot grid (32 px) with larger major marks (160 px). The grid moves with the camera to maintain visual orientation as you pan and zoom — it doesn't represent any snapping grid of its own; frame snapping is edge- and center-based.</p>
+        <p>The background shows a fine dot grid (32 px) with larger major marks (160 px). The grid moves with the camera to maintain visual orientation as you pan and zoom.</p>
 
         <h3>Box selection (marquee)</h3>
         <p>Click and drag on any empty area of the canvas (without holding Ctrl) to draw a selection rectangle. Any frame whose bounding box overlaps the rectangle will be selected when you release. Hold <kbd>Shift</kbd> while drawing to add to an existing selection.</p>
+
+        <h3>Select all</h3>
+        <p>Press <kbd>Ctrl</kbd> + <kbd>A</kbd> to instantly select all <em>visible</em> frames. Frames that belong to hidden groups are excluded from this selection.</p>
       </section>
 
       <!-- =====================================================
@@ -346,6 +350,10 @@
             <div class="docs-def-val">Add frames to the current selection without clearing it.</div>
           </div>
           <div class="docs-def-row">
+            <div class="docs-def-key">Ctrl + A</div>
+            <div class="docs-def-val">Select all visible frames (hidden group frames are excluded).</div>
+          </div>
+          <div class="docs-def-row">
             <div class="docs-def-key">Escape</div>
             <div class="docs-def-val">Clear the selection.</div>
           </div>
@@ -388,11 +396,11 @@
         <p class="docs-section-intro">Each frame can hold any number of content blocks — text, images, and links — in any order. Use the toolbar at the bottom of the frame to add blocks.</p>
 
         <h3>Text blocks</h3>
-        <p>Click <strong>Aa · Text</strong> in the frame toolbar to add a text block. The block is a plain <code>contenteditable</code> area — type freely. In <strong>View Mode</strong>, text blocks render as Markdown: use <code>**bold**</code>, <code>*italic*</code>, headings, lists, and so on.</p>
+        <p>Click <strong>Aa · Text</strong> in the frame toolbar to add a text block. The block is a plain <code>contenteditable</code> area — type freely. In <strong>View Mode</strong> (or when a frame's preview is toggled on), text blocks render as Markdown: use <code>**bold**</code>, <code>*italic*</code>, headings, lists, and so on.</p>
 
         <div class="docs-callout tip">
           <span class="docs-callout-icon">✍️</span>
-          <p>Write your script or shot notes in Markdown inside text blocks, then switch to View Mode to see them rendered cleanly for presentation.</p>
+          <p>Write your script or shot notes in Markdown inside text blocks, then switch to View Mode (or use the per-frame preview toggle) to see them rendered cleanly for presentation.</p>
         </div>
 
         <h3>Image blocks</h3>
@@ -447,6 +455,9 @@
         </ul>
         <p>When a drag lands on an invalid target, Loom shows a toast message explaining why the connection was rejected.</p>
 
+        <h3>Group inheritance</h3>
+        <p>When you draw a connection from a parent frame that belongs to a group, the child frame (and all of its descendants) automatically inherit that group membership. This keeps logical subtrees together without manual reassignment.</p>
+
         <h3>Cutting a connection</h3>
         <p>Click anywhere along the string thread to remove it. The thread highlights red when hovered to signal that clicking will cut it.</p>
 
@@ -455,8 +466,11 @@
         <ul>
           <li><strong>Send behind frames</strong> — the string renders underneath all cards.</li>
           <li><strong>Bring in front of frames</strong> — the string renders above all cards (default).</li>
-          <li><strong>Apply to all strings</strong> — applies the same layer choice to every connection on the board at once.</li>
+          <li><strong>Apply to all strings</strong> — applies the same layer choice to every <em>visible</em> connection on the board at once (hidden-group connections are skipped).</li>
         </ul>
+
+        <h3>Connections and hidden groups</h3>
+        <p>Connections involving frames in a hidden group are not drawn on the canvas. They are preserved in the project data and reappear when the group is made visible again.</p>
       </section>
 
       <!-- =====================================================
@@ -471,19 +485,89 @@
           </div>
           <h2>Frame List</h2>
         </div>
-        <p class="docs-section-intro">The left panel's <strong>Sequence</strong> section lists every frame in hierarchy order. Root frames (those with no parent) appear at the top level; connected children are indented beneath their parents.</p>
+        <p class="docs-section-intro">The left panel's <strong>Frames</strong> section lists every frame in hierarchy order, organized into groups and root-level frames. A <strong>+</strong> button in the section header creates new groups.</p>
 
         <h3>Navigation</h3>
         <p>Click any row to select the frame <em>and</em> pan the canvas to center it in view. This is useful for jumping to a specific scene in a large board without scrolling manually.</p>
 
         <h3>Hierarchy display</h3>
-        <p>Child frames are indented (up to three levels) with an arrow connector symbol. The indentation reflects the parent→child relationships drawn on the canvas. Frames without any connections appear as siblings at the root level.</p>
+        <p>Child frames are indented beneath their parents with an arrow connector symbol (↳). The indentation is dynamic — each level adds 12 px of left padding — and reflects the parent→child relationships drawn on the canvas. Frames without any connections appear as siblings at the root level.</p>
 
         <h3>Color dot and number</h3>
-        <p>Each row shows a colored dot matching the frame's tag color and a zero-padded frame number reflecting its position in the <code>cards</code> array (the order frames were created, not their spatial position).</p>
+        <p>Each row shows a colored dot matching the frame's tag color and a zero-padded frame number reflecting the order frames were created (not their spatial position).</p>
+
+        <h3>Dragging frames between groups</h3>
+        <p>Drag any frame row and drop it onto a group header row to assign the frame (and its entire descendant subtree) to that group. Drag a frame row to the <strong>Frames</strong> section header to remove it from any group.</p>
 
         <h3>Deleting from the list</h3>
-        <p>Hover a row to reveal a <strong>×</strong> delete button on the right. Clicking it removes the frame and all its connections, identical to pressing <kbd>Delete</kbd> with the frame selected on the canvas.</p>
+        <p>Hover a frame row to reveal a <strong>×</strong> delete button on the right. Clicking it removes the frame and all its connections — identical to pressing <kbd>Delete</kbd> with the frame selected on the canvas.</p>
+      </section>
+
+      <!-- =====================================================
+           SECTION: Groups
+           ===================================================== -->
+      <section class="docs-section" id="groups">
+        <div class="docs-section-header">
+          <div class="docs-section-icon">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+              <rect x="1.5" y="4.5" width="13" height="9" rx="2" stroke="currentColor" stroke-width="1.4" stroke-dasharray="2.5 1.5"/>
+              <path d="M4 4.5V3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v1.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <h2>Groups</h2>
+        </div>
+        <p class="docs-section-intro">Groups let you cluster related frames together in the Frame List. They support collapsing, hiding, optional visual border highlights, drag-to-reorder, and a right-click context menu for quick actions.</p>
+
+        <h3>Creating a group</h3>
+        <p>Click the <strong>+</strong> button in the top-right corner of the <strong>Frames</strong> section header. A new group row appears named "New Group" with zero frames. Click the name field to rename it.</p>
+
+        <h3>Adding frames to a group</h3>
+        <p>Drag any frame row from the Frame List and drop it onto the target group row. The frame <em>and all of its connected descendants</em> move into the group together. A toast confirms how many frames were moved.</p>
+
+        <div class="docs-callout tip">
+          <span class="docs-callout-icon">💡</span>
+          <p>You cannot drag a frame into a group it already belongs to — Loom will notify you with a toast instead.</p>
+        </div>
+
+        <h3>Removing frames from a group</h3>
+        <p>Drag any frame row to the <strong>Frames</strong> section header (the area above all groups). The frame and its descendants are unassigned from the group and returned to the ungrouped root level.</p>
+
+        <h3>Collapsing and expanding</h3>
+        <p>Click the chevron (▾) on the left of a group row to collapse or expand the group's frame rows in the Frame List. When collapsed, the frames remain fully visible on the canvas — collapsing is a list-view-only convenience, not a hide operation.</p>
+
+        <h3>Hiding and showing group frames</h3>
+        <p>Click the <strong>eye</strong> icon button on the group row to hide all frames in that group. Hidden frames:</p>
+        <ul>
+          <li>Are removed from the canvas entirely (not just invisible — they don't receive clicks or participate in box-selection).</li>
+          <li>Have their connection strings hidden as well.</li>
+          <li>Are excluded from <strong>Zoom to Fit</strong> and <strong>Ctrl + A</strong> select-all.</li>
+          <li>Are excluded from the storyboard PNG export.</li>
+          <li>Remain collapsed in the Frame List with all interactive controls dimmed.</li>
+        </ul>
+        <p>Click the eye icon again (it shows a slashed eye while hidden) to restore all frames in that group.</p>
+
+        <div class="docs-callout warning">
+          <span class="docs-callout-icon">⚠️</span>
+          <p>Hiding a group also disables its border highlight and collapses it. Showing the group again re-expands it, but does not automatically re-enable the border.</p>
+        </div>
+
+        <h3>Border highlight</h3>
+        <p>Click the <strong>dashed-rectangle</strong> icon button on a group row to toggle a visual border around all frames in the group on the canvas. The border is a dashed SVG rect drawn behind the frames, sized to tightly wrap the group's bounding box with a small padding. It uses the group's accent color (or the default teal accent if none is set).</p>
+        <p>The border updates live as frames within the group are moved or resized. It is hidden automatically when the group is hidden.</p>
+
+        <h3>Right-click context menu</h3>
+        <p>Right-click any group row (while in Edit Mode and while the group is not hidden) to open a context menu with:</p>
+        <ul>
+          <li><strong>Hide Frames / Show Frames</strong> — same as the eye button.</li>
+          <li><strong>Show Borders / Hide Borders</strong> — same as the border button.</li>
+          <li><strong>Delete Group</strong> — removes the group and unassigns all its frames, without deleting the frames themselves.</li>
+        </ul>
+
+        <h3>Reordering groups</h3>
+        <p>Hover a group row to reveal a grip handle (☰) on the left. Drag from the grip to reorder groups within the Frame List. Only groups can be reordered this way — frame rows within a group follow the connection hierarchy.</p>
+
+        <h3>Deleting a group</h3>
+        <p>Use the right-click context menu and choose <strong>Delete Group</strong>. The group is removed and all its frames are unassigned (returned to the ungrouped pool) but <em>not</em> deleted from the canvas. This is undoable.</p>
       </section>
 
       <!-- =====================================================
@@ -502,17 +586,17 @@
         <p class="docs-section-intro">The Inspector panel on the right shows editable metadata for the currently selected frame. Selecting multiple frames locks the Inspector and shows a count badge instead.</p>
 
         <h3>Title</h3>
-        <p>The frame's display name. Editable here or directly in the frame header on the canvas — the two stay in sync. Maximum 60 characters. In View Mode, the title renders as Markdown.</p>
+        <p>The frame's display name. Editable here or directly in the frame header on the canvas — the two stay in sync. Maximum 60 characters. In View Mode (or with per-frame preview enabled), the title renders as Markdown.</p>
 
         <h3>Tag color</h3>
-        <p>Six preset swatches set the frame's accent color, which tints the border, glow, frame-line stripe, and pin button. You cannot enter a custom hex value from the Inspector; the preset palette keeps the board visually coherent.</p>
+        <p>Six preset swatches set the frame's accent color, which tints the border, glow, frame-line stripe, and pin button.</p>
 
         <h3>Position (X, Y) and Size (W, H)</h3>
         <p>The exact world-space coordinates of the frame's top-left corner, and its width and height in world pixels. All four fields are editable — type a value and press <kbd>Enter</kbd> or click away to apply. Minimum size is <strong>W: 180, H: 130</strong>.</p>
-        <p>These values update live while you drag or resize a frame, so you can use them to precisely position something after an approximate drag.</p>
+        <p>These values update live while you drag or resize a frame.</p>
 
         <h3>Notes</h3>
-        <p>A multi-line text area for director's notes, camera descriptions, dialogue, or any free-form annotation. Notes are not displayed inside the frame card itself — they're Inspector-only metadata. In View Mode, notes render as Markdown.</p>
+        <p>A multi-line text area for director's notes, camera descriptions, dialogue, or any free-form annotation. Notes are Inspector-only metadata — they are not displayed inside the frame card on the canvas. In View Mode, notes render as Markdown.</p>
 
         <h3>Frame line</h3>
         <p>A segmented button row with five options: <strong>Left, Right, Up, Down, None</strong>. Controls which edge of the frame the colored accent stripe sits on. Defaults to Left for all new frames.</p>
@@ -537,7 +621,7 @@
         <p class="docs-section-intro">Loom has two distinct modes accessed from the mode dropdown in the top bar. Your last-used mode is remembered across sessions.</p>
 
         <h3>Edit Mode</h3>
-        <p>Full editing is available: add, move, resize, and delete frames; manage blocks; draw and cut connections; adjust the Inspector; undo and redo. This is the default mode when you first open Loom.</p>
+        <p>Full editing is available: add, move, resize, and delete frames; manage blocks; draw and cut connections; manage groups; adjust the Inspector; undo and redo. This is the default mode when you first open Loom.</p>
 
         <h3>View Mode</h3>
         <p>Read-only presentation mode. Editing controls are hidden from the UI:</p>
@@ -546,6 +630,7 @@
           <li>Block controls, resize handles, delete buttons, and pin icons are hidden.</li>
           <li>The Inspector fields become read-only.</li>
           <li>Undo and Redo are disabled.</li>
+          <li>Group action buttons are disabled.</li>
           <li><strong>Text blocks, titles, and notes render as Markdown</strong> — use this to show polished formatted content to collaborators.</li>
         </ul>
         <p>Pan, zoom, frame selection, and canvas navigation all remain fully functional in View Mode.</p>
@@ -557,6 +642,41 @@
 
         <h3>Switching modes</h3>
         <p>Open the mode dropdown (top-left of the top bar) and choose <strong>Edit Mode</strong> or <strong>View Mode</strong>. A dot indicator in the button turns <span style="color:var(--accent)">teal</span> in Edit Mode and <span style="color:var(--amber)">amber</span> in View Mode. A toast confirms the switch.</p>
+      </section>
+
+      <!-- =====================================================
+           SECTION: Frame Preview
+           ===================================================== -->
+      <section class="docs-section" id="preview">
+        <div class="docs-section-header">
+          <div class="docs-section-icon">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+              <circle cx="8" cy="8" r="2.5" fill="currentColor"/>
+              <path d="M2 8s2.5-5 6-5 6 5 6 5-2.5 5-6 5-6-5-6-5z" stroke="currentColor" stroke-width="1.4" fill="none"/>
+            </svg>
+          </div>
+          <h2>Frame Preview</h2>
+        </div>
+        <p class="docs-section-intro">In Edit Mode, each frame can independently switch to a Markdown preview — letting you check rendered content without switching the entire board to View Mode.</p>
+
+        <h3>Per-frame preview toggle</h3>
+        <p>Hover over or select any frame. An eye icon appears in the top-right corner of the frame header, next to the pin button. Click it to toggle that frame between edit view (raw text) and preview (rendered Markdown). The toggle state persists across re-renders while you're in the same session.</p>
+        <p>When a frame is in preview mode:</p>
+        <ul>
+          <li>The frame toolbar (Text / Image / Link) is hidden.</li>
+          <li>The resize handle is hidden.</li>
+          <li>Block drag and delete controls are hidden.</li>
+          <li>Title, text blocks, and notes all render as Markdown.</li>
+        </ul>
+        <p>Clicking the eye icon again restores the frame to its normal editable state.</p>
+
+        <h3>Toggle all previews</h3>
+        <p>Press <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>P</kbd> to toggle preview mode on or off for all <em>visible</em> frames at once. If any frames currently have preview active, the shortcut turns preview off for all of them. If none do, it turns preview on for all. A toast confirms the action.</p>
+
+        <div class="docs-callout tip">
+          <span class="docs-callout-icon">💡</span>
+          <p>Per-frame previews are a session-only convenience — they are not saved to the project file and reset when you reload the page. To make Markdown rendering permanent and exportable, use <strong>View Mode</strong>.</p>
+        </div>
       </section>
 
       <!-- =====================================================
@@ -587,13 +707,12 @@
         <h3>What is and isn't tracked</h3>
         <p>The history system takes a snapshot of the entire board state after each meaningful action:</p>
         <ul>
-          <li><strong>Tracked:</strong> adding/deleting frames, moving frames, resizing, changing colors, adding/removing blocks, drawing/cutting connections, frame line changes, clearing the board, reordering blocks.</li>
-          <li><strong>Not tracked:</strong> camera position (pan/zoom), panel widths — these are intentionally preserved across undo/redo so the viewport doesn't jump.</li>
+          <li><strong>Tracked:</strong> adding/deleting frames, moving frames, resizing, changing colors, adding/removing blocks, drawing/cutting connections, frame line changes, clearing the board, reordering blocks, creating/deleting/renaming/reordering groups, toggling group borders, hiding/showing groups, assigning frames to groups.</li>
+          <li><strong>Not tracked:</strong> camera position (pan/zoom), panel widths, group collapse state, per-frame preview state — these are intentionally preserved across undo/redo so the viewport and UI don't jump.</li>
         </ul>
 
         <h3>Debounced text edits</h3>
-        <p>Typing in title, notes, or text block fields doesn't create a new history entry on every keystroke. Instead, changes are batched and committed after a 700 ms pause in typing. This means a full sentence typed quickly becomes a single undoable step, not 50.</p>
-        <p>If you delete a frame immediately after typing, Loom flushes the pending text snapshot first so the type and delete are two separate undo steps.</p>
+        <p>Typing in title, notes, group name, or text block fields doesn't create a new history entry on every keystroke. Changes are batched and committed after a 700 ms pause in typing. If you delete a frame immediately after typing, Loom flushes the pending text snapshot first so the type and delete are two separate undo steps.</p>
 
         <h3>History depth</h3>
         <p>Up to <strong>60 history states</strong> are kept. Older states are discarded when the limit is reached.</p>
@@ -622,24 +741,24 @@
         <h3>Export → Project (.json)</h3>
         <p>Downloads the complete board state as a <code>.json</code> file. The filename is generated from the project name with special characters stripped. This file contains:</p>
         <ul>
-          <li>All frames — their positions, sizes, titles, colors, frame line settings, and block content.</li>
-          <li>All connections between frames.</li>
+          <li>All frames — positions, sizes, titles, colors, frame line settings, block content, and group assignments.</li>
+          <li>All connections between frames and their layer settings.</li>
+          <li>All groups — names, collapsed state, hidden state, border state, and sort order.</li>
           <li>The current camera position and zoom level.</li>
-          <li>Panel layout widths.</li>
-          <li>The project name and frame counter.</li>
+          <li>Panel layout widths and the project name.</li>
         </ul>
-        <p>Open a project file again via <strong>Import</strong>. The format is forward-compatible — extra unknown fields are ignored.</p>
 
         <div class="docs-callout tip">
           <span class="docs-callout-icon">💡</span>
-          <p>The project JSON is plain text and human-readable. You can inspect or edit it with any text editor if you need to bulk-update frame positions, rename all titles at once, etc.</p>
+          <p>The project JSON is plain text and human-readable. You can inspect or batch-edit it with any text editor.</p>
         </div>
 
         <h3>Export → Storyboard (.png)</h3>
-        <p>Renders a flat PNG image of all frames as they appear on the board. The export:</p>
+        <p>Renders a flat PNG image of the board. The export only includes <em>visible</em> frames — frames belonging to hidden groups are excluded. The export:</p>
         <ul>
-          <li>Automatically fits all frames with a consistent margin.</li>
-          <li>Includes connection strings between frames.</li>
+          <li>Automatically fits all visible frames with a consistent margin.</li>
+          <li>Includes visible connection strings between frames.</li>
+          <li>Includes any active group border highlights.</li>
           <li>Hides editing chrome (toolbar buttons, resize handles, pin icons).</li>
           <li>Uses the dark <code>#1a1d24</code> void background.</li>
         </ul>
@@ -649,8 +768,9 @@
         <p>Click <strong>Import</strong> in the top bar and pick a <code>.json</code> file previously exported from Loom. Importing replaces the current board entirely. The app:</p>
         <ul>
           <li>Switches to <strong>View Mode</strong> automatically after import.</li>
+          <li>Restores group hidden and border states from the file.</li>
           <li>Resets the undo/redo history and records the imported state as the starting point.</li>
-          <li>Runs <code>Zoom to Fit</code> to bring all frames into view.</li>
+          <li>Runs <strong>Zoom to Fit</strong> to bring all visible frames into view.</li>
         </ul>
 
         <div class="docs-callout warning">
@@ -675,7 +795,7 @@
           </div>
           <h2>Keyboard Shortcuts</h2>
         </div>
-        <p class="docs-section-intro">Shortcuts are active when no text field is focused. Most are disabled in View Mode, as noted.</p>
+        <p class="docs-section-intro">Shortcuts are active when no text field is focused. Most editing shortcuts are disabled in View Mode, as noted.</p>
 
         <table class="docs-shortcut-table">
           <thead>
@@ -700,7 +820,7 @@
             </tr>
             <tr>
               <td><kbd>F</kbd></td>
-              <td>Zoom to fit all frames</td>
+              <td>Zoom to fit all visible frames</td>
             </tr>
             <tr>
               <td><kbd>0</kbd></td>
@@ -731,8 +851,18 @@
               <td>Additive marquee selection</td>
             </tr>
             <tr>
+              <td><kbd>Ctrl</kbd> + <kbd>A</kbd></td>
+              <td>Select all visible frames</td>
+            </tr>
+            <tr>
               <td><kbd>Escape</kbd></td>
               <td>Clear selection; close menus</td>
+            </tr>
+
+            <tr class="docs-shortcut-group-header"><td colspan="2">Preview <span style="color:var(--accent);font-size:10px;margin-left:6px;">Edit Mode only</span></td></tr>
+            <tr>
+              <td><kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>P</kbd></td>
+              <td>Toggle Markdown preview for all visible frames</td>
             </tr>
 
             <tr class="docs-shortcut-group-header"><td colspan="2">History <span style="color:var(--accent);font-size:10px;margin-left:6px;">Edit Mode only</span></td></tr>
@@ -753,28 +883,24 @@
 
         <div class="docs-callout tip">
           <span class="docs-callout-icon">🖱️</span>
-          <p>Hover over most elements — frames, the canvas, resize handles, the pin button — to see a tooltip with a quick reminder of what that element does and which shortcuts apply to it.</p>
+          <p>Hover over most elements — frames, the canvas, resize handles, the pin button, group action buttons — to see a tooltip with a quick reminder of what that element does.</p>
         </div>
       </section>
 
     </main>
   </div><!-- /.docs-layout -->
 
-  <!-- =========================================================
-       ACTIVE NAV SCROLL TRACKING
-       Small inline script — no external dependency.
-       ========================================================= -->
   <script>
     (function () {
       const links = document.querySelectorAll('.docs-nav-link');
       const sectionIds = [
         'getting-started', 'canvas', 'frames', 'blocks',
-        'connections', 'frame-list', 'inspector',
-        'modes', 'undo-redo', 'import-export', 'shortcuts'
+        'connections', 'frame-list', 'groups', 'inspector',
+        'modes', 'preview', 'undo-redo', 'import-export', 'shortcuts'
       ];
 
       function getActive() {
-        const scrollY = window.scrollY + 80; // topbar offset
+        const scrollY = window.scrollY + 80;
         let active = sectionIds[0];
         sectionIds.forEach(id => {
           const el = document.getElementById(id) || document.getElementById(id + '-section');
@@ -792,7 +918,6 @@
         });
       }
 
-      // Map section elements (first occurrence wins)
       sectionIds.forEach(id => {
         if (!document.getElementById(id)) {
           const fallback = document.getElementById(id + '-section');
@@ -803,7 +928,6 @@
       window.addEventListener('scroll', syncActive, { passive: true });
       syncActive();
 
-      // Smooth scroll on click
       links.forEach(link => {
         link.addEventListener('click', e => {
           e.preventDefault();
