@@ -306,7 +306,9 @@
     // --- Card container with a transform ---
     const clone = liveWorld.cloneNode(true);
     clone.removeAttribute("id");
-    clone.querySelectorAll("#conn-svg-back, #conn-svg").forEach(el => el.remove());
+    clone
+      .querySelectorAll("#conn-svg-back, #conn-svg")
+      .forEach((el) => el.remove());
 
     // Position so that world (minX, minY) lands at (0,0) in the wrapper
     clone.style.position = "absolute";
@@ -330,19 +332,25 @@
 
     // --- Back SVG layer (behind cards) ---
     if (liveSvgBack) {
-      const svgBack = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+      const svgBack = document.createElementNS(
+        "http://www.w3.org/2000/svg",
+        "svg",
+      );
       svgBack.style.position = "absolute";
       svgBack.style.left = "0";
       svgBack.style.top = "0";
       svgBack.style.overflow = "visible";
       svgBack.style.pointerEvents = "none";
-      svgBack.style.zIndex = "0";                      // behind cards
+      svgBack.style.zIndex = "0"; // behind cards
       svgBack.setAttribute("width", String(width));
       svgBack.setAttribute("height", String(height));
       svgBack.setAttribute("viewBox", `0 0 ${width} ${height}`);
       svgBack.setAttribute("preserveAspectRatio", "none");
 
-      const offsetGroup = document.createElementNS("http://www.w3.org/2000/svg", "g");
+      const offsetGroup = document.createElementNS(
+        "http://www.w3.org/2000/svg",
+        "g",
+      );
       offsetGroup.setAttribute("transform", `translate(${-minX}, ${-minY})`);
       // Copy everything except <defs> (filters omitted for export)
       Array.from(liveSvgBack.children).forEach((child) => {
@@ -358,19 +366,25 @@
 
     // --- Front SVG layer (in front of cards) ---
     if (liveSvgFront) {
-      const svgFront = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+      const svgFront = document.createElementNS(
+        "http://www.w3.org/2000/svg",
+        "svg",
+      );
       svgFront.style.position = "absolute";
       svgFront.style.left = "0";
       svgFront.style.top = "0";
       svgFront.style.overflow = "visible";
       svgFront.style.pointerEvents = "none";
-      svgFront.style.zIndex = "2";                      // in front of cards
+      svgFront.style.zIndex = "2"; // in front of cards
       svgFront.setAttribute("width", String(width));
       svgFront.setAttribute("height", String(height));
       svgFront.setAttribute("viewBox", `0 0 ${width} ${height}`);
       svgFront.setAttribute("preserveAspectRatio", "none");
 
-      const offsetGroup = document.createElementNS("http://www.w3.org/2000/svg", "g");
+      const offsetGroup = document.createElementNS(
+        "http://www.w3.org/2000/svg",
+        "g",
+      );
       offsetGroup.setAttribute("transform", `translate(${-minX}, ${-minY})`);
       Array.from(liveSvgFront.children).forEach((child) => {
         if (child.tagName.toLowerCase() !== "defs")
@@ -420,14 +434,40 @@
       return;
     }
 
-    const bounds =
-      typeof app.getCardsBounds === "function" ? app.getCardsBounds() : null;
-    if (!bounds) {
+    var visibleMinX = Infinity,
+      visibleMinY = Infinity;
+    var visibleMaxX = -Infinity,
+      visibleMaxY = -Infinity;
+
+    state.cards.forEach(function (c) {
+      // skip if card belongs to a hidden group
+      if (c.groupId) {
+        var group = state.groups.find(function (g) {
+          return g.id === c.groupId;
+        });
+        if (group && group.hidden) return; // hidden → ignore
+      }
+
+      visibleMinX = Math.min(visibleMinX, c.x);
+      visibleMinY = Math.min(visibleMinY, c.y);
+      visibleMaxX = Math.max(visibleMaxX, c.x + c.w);
+      visibleMaxY = Math.max(visibleMaxY, c.y + c.h);
+    });
+
+    if (visibleMinX === Infinity) {
+      // no visible cards – treat same as empty board
       if (typeof app.toast === "function") {
         app.toast("Nothing to export yet — add a frame first");
       }
       return;
     }
+
+    var bounds = {
+      minX: visibleMinX,
+      minY: visibleMinY,
+      maxX: visibleMaxX,
+      maxY: visibleMaxY,
+    };
 
     const originalMode = getCurrentMode();
     const changedMode = originalMode !== "view";
