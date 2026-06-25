@@ -41,20 +41,27 @@ function zoomAt(sx, sy, factor) {
 }
 
 function zoomToFit() {
-  if (state.cards.length === 0) {
+  // Filter out hidden cards
+  var visibleCards = state.cards.filter(function (c) {
+    return !isCardHidden(c);
+  });
+
+  if (visibleCards.length === 0) {
     centerView();
     return;
   }
+
   var minX = Infinity,
     minY = Infinity,
     maxX = -Infinity,
     maxY = -Infinity;
-  state.cards.forEach((c) => {
+  visibleCards.forEach(function (c) {
     minX = Math.min(minX, c.x);
     minY = Math.min(minY, c.y);
     maxX = Math.max(maxX, c.x + c.w);
     maxY = Math.max(maxY, c.y + c.h);
   });
+
   var rect = $canvas.getBoundingClientRect();
   var pad = 80;
   var s = Math.min(
@@ -340,9 +347,15 @@ window.addEventListener("keydown", (e) => {
     mode !== "view"
   ) {
     e.preventDefault();
-    var allIds = state.cards.map((c) => c.id);
+    var allIds = state.cards
+      .filter(function (c) {
+        return !isCardHidden(c);
+      })
+      .map(function (c) {
+        return c.id;
+      });
     selectCards(allIds);
-    toast("All frames selected");
+    toast("All visible frames selected");
     return;
   }
 
@@ -352,6 +365,7 @@ window.addEventListener("keydown", (e) => {
   else if (e.key === "0") centerView();
   else if (e.key === "Escape") {
     closeConnContextMenu();
+    closeGroupContextMenu();
     clearSelection();
     clearSelectionPreview();
   } else if (mode !== "view" && (e.key === "Delete" || e.key === "Backspace")) {
