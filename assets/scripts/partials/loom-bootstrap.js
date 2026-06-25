@@ -67,9 +67,11 @@ function renderWorld() {
   Array.from($world.children).forEach((child) => {
     if (child !== $svg && child !== $svgBack) child.remove();
   });
-  state.cards.forEach((card, i) =>
-    $world.appendChild(buildCardEl(card, i + 1)),
-  );
+  state.cards.forEach(function (card, i) {
+    if (isCardHidden(card)) return; // skup
+    var el = buildCardEl(card, i + 1);
+    $world.appendChild(el);
+  });
   if ($svgBack) {
     if ($svgBack.parentNode !== $world) $world.appendChild($svgBack);
     else $world.appendChild($svgBack);
