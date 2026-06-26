@@ -1,8 +1,9 @@
 # Loom — Storyboard Maker
-
 ![loomsite logo](https://github.com/codex-bat/Loom/blob/main/assets/visual/l_small-headers_polished.png)
 
 A sleek, infinite-canvas storyboard tool.
+
+---
 
 ## Try it
 
