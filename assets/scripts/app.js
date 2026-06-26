@@ -1,22 +1,20 @@
 (function () {
+  // ── Module definitions (existing) ─────────────────────
   const modules = [
-    {
-      key: "core",
-      candidates: ["assets/scripts/partials/loom-core.js"],
-    },
+    { key: "core", candidates: ["assets/scripts/partials/loom-core.js"] },
     {
       key: "graphics",
       candidates: ["assets/scripts/partials/loom-graphics.js"],
-    },
-    {
-      key: "cards",
-      candidates: ["assets/scripts/partials/loom-cards.js"],
     },
     {
       key: "bootstrap",
       candidates: ["assets/scripts/partials/loom-bootstrap.js"],
     },
   ];
+
+  // ── Element definitions (new – merged into app.js) ───
+  const ELEMENTS_PATH = "assets/scripts/elements/";
+  const ELEMENT_FILES = ["loom-frames.js"]; // add more files here later
 
   function alreadyLoaded(key) {
     return !!(window.LoomModules && window.LoomModules[key]);
@@ -28,7 +26,6 @@
         resolve();
         return;
       }
-
       const script = document.createElement("script");
       script.async = false;
       script.src = src;
@@ -61,9 +58,43 @@
     );
   }
 
+  // ── New: load all element files ──────────────────────
+  async function loadElements() {
+    window.LoomElements = window.LoomElements || {};
+
+    for (const file of ELEMENT_FILES) {
+      try {
+        await new Promise((resolve, reject) => {
+          const script = document.createElement("script");
+          script.src = ELEMENTS_PATH + file;
+          script.onload = resolve;
+          script.onerror = () => reject(new Error(`Failed to load ${file}`));
+          document.head.appendChild(script);
+        });
+        // The script just ran and registered itself on window.LoomElements
+      } catch (err) {
+        console.error(`❌ Failed to load element ${file}:`, err);
+      }
+    }
+
+    document.dispatchEvent(new CustomEvent("loom-elements-ready"));
+  }
+
+  // ── Start everything ────────────────────────────────
   async function start() {
+    // 1. Load the three core/graphics/bootstrap modules
     for (const mod of modules) {
       await loadModule(mod);
+    }
+
+    // 2. Now the DOM refs (like $inspTitle) exist – load elements
+    await loadElements();
+
+    // 3. Run the app’s initialisation (was previously auto‑called by loom-bootstrap.js)
+    if (typeof window.LoomInit === "function") {
+      window.LoomInit();
+    } else {
+      console.error("LoomInit not found – did loom-bootstrap.js expose it?");
     }
   }
 
