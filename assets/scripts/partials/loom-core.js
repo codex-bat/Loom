@@ -158,6 +158,7 @@ function normalizeCard(card) {
   if (!card || typeof card !== "object") return card;
   card.frameLine = normalizeFrameLine(card.frameLine);
   card.groupId = card.groupId || null;
+  card.type = card.type || "frame";
   return card;
 }
 
@@ -632,6 +633,7 @@ function syncModeDropdown() {
 }
 
 function setMode(newMode) {
+  closeModeDropdown();
   var next = newMode === "view" ? "view" : "edit";
   var changed = next !== mode;
   mode = next;
