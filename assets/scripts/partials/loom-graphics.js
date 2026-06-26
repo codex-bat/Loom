@@ -328,7 +328,7 @@ window.addEventListener("keydown", (e) => {
     return;
   }
 
-  // ── Toggle preview all frames ─────────────────────────
+  // ── Toggle preview all (delegates to the current element if possible) ──
   if (
     (e.ctrlKey || e.metaKey) &&
     e.shiftKey &&
@@ -336,7 +336,12 @@ window.addEventListener("keydown", (e) => {
     mode === "edit"
   ) {
     e.preventDefault();
-    toggleAllPreviews();
+    if (typeof toggleAllPreviews === "function") {
+      toggleAllPreviews();
+    } else {
+      // Optionally dispatch a custom event for elements to handle
+      document.dispatchEvent(new CustomEvent("loom:toggle-preview"));
+    }
     return;
   }
 
@@ -360,8 +365,33 @@ window.addEventListener("keydown", (e) => {
   }
 
   // ── Existing shortcuts ───────────────────────────────
-  if (mode !== "view" && (e.key === "n" || e.key === "N")) addCard();
-  else if (e.key === "f" || e.key === "F") zoomToFit();
+  if (mode !== "view" && (e.key === "n" || e.key === "N")) {
+    const defaultDef = window.LoomElements && window.LoomElements["frame"];
+    if (defaultDef && typeof defaultDef.factory === "function") {
+      const card = defaultDef.factory();
+      state.cards.push(card);
+      renderAll();
+      selectCard(card.id);
+      pushHistory();
+      save();
+      toast("Added Frame");
+    } else {
+      // fallback: try any first element
+      const first = Object.values(window.LoomElements || {})[0];
+      if (first && typeof first.factory === "function") {
+        const card = first.factory();
+        state.cards.push(card);
+        renderAll();
+        selectCard(card.id);
+        pushHistory();
+        save();
+        toast(`Added ${first.name || "element"}`);
+      } else {
+        toast("No elements available");
+      }
+    }
+    e.preventDefault();
+  } else if (e.key === "f" || e.key === "F") zoomToFit();
   else if (e.key === "0") centerView();
   else if (e.key === "Escape") {
     closeConnContextMenu();
