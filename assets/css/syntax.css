@@ -1,0 +1,68 @@
+/* ============================================================
+   Syntax highlighting – extended colour palette
+   ============================================================ */
+.syn-keyword {
+    color: var(--accent);
+    font-weight: 500;
+}
+
+.syn-string {
+    color: var(--string-color);
+    /* gold connection string */
+}
+
+.syn-comment {
+    color: var(--ink-faint);
+    /* muted grey */
+    font-style: italic;
+}
+
+.syn-number {
+    color: var(--amber);
+    /* warm amber */
+}
+
+.syn-boolean {
+    color: var(--accent-dim);
+    /* soft teal */
+}
+
+.syn-builtin {
+    color: var(--accent);
+    /* same as keyword, or could use a new var */
+}
+
+.syn-function {
+    color: #8fb4ff;
+    /* new variable: --syn-function */
+}
+
+.syn-class {
+    color: #d6b4ff;
+    /* new variable: --syn-class */
+}
+
+.syn-operator {
+    color: var(--ink-dim);
+    /* subdued */
+}
+
+.syn-regex {
+    color: var(--danger);
+    /* red */
+}
+
+.syn-tag {
+    color: var(--danger);
+    /* HTML tags */
+}
+
+.syn-attr-name {
+    color: var(--amber);
+    /* attribute names */
+}
+
+.syn-attr-value {
+    color: var(--string-color);
+    /* attribute values */
+}
