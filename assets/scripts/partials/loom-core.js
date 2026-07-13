@@ -1,6 +1,6 @@
 /* ====================================================
-     CONSTANTS & STATE
-     ==================================================== */
+   CONSTANTS & STATE
+   ==================================================== */
 var STORAGE_KEY = "loom-storyboard-v1";
 var MODE_STORAGE_KEY = "loom-mode-v1";
 var SWATCHES = [
@@ -12,14 +12,12 @@ var SWATCHES = [
   "#f4e07a",
 ];
 var SVG_NS = "http://www.w3.org/2000/svg";
-var PANEL_MIN_WIDTH = 180;
-var PANEL_MAX_WIDTH = 420;
-var PANEL_MIN_CANVAS_WIDTH = 420;
-var PANEL_MOBILE_BREAKPOINT = 680;
-
-// Ctrl+Drag frame-alignment snapping
-var SNAP_PX = 8; // screen-space snap threshold (converted to world units by zoom)
-var ACCENT_VAR = "var(--accent, #6fe3c8)"; // root accent, theme-reactive
+var PANEL_MIN_WIDTH = 180,
+  PANEL_MAX_WIDTH = 420,
+  PANEL_MIN_CANVAS_WIDTH = 420,
+  PANEL_MOBILE_BREAKPOINT = 680;
+var SNAP_PX = 8;
+var ACCENT_VAR = "var(--accent, #6fe3c8)";
 var WORLD_ORIGIN = { x: 0, y: 0 };
 
 var DEFAULT_STATE = () => ({
@@ -33,20 +31,20 @@ var DEFAULT_STATE = () => ({
 });
 
 var state = DEFAULT_STATE();
-var selectedId = null;
-var selectedIds = new Set();
-var pendingImageCardId = null;
-var mode = "edit";
+var selectedId = null,
+  selectedIds = new Set(),
+  pendingImageCardId = null,
+  mode = "edit";
 
 // ── History (undo/redo) ──────────────────────────────
-var MAX_HISTORY = 60;
-var historyStack = [];
-var historyIndex = -1;
-var historyDebounceTimer = null;
+var MAX_HISTORY = 60,
+  historyStack = [],
+  historyIndex = -1,
+  historyDebounceTimer = null;
 
 /* ====================================================
-     DOM REFS
-     ==================================================== */
+   DOM REFS
+   ==================================================== */
 var $canvas = document.getElementById("canvas");
 var $world = document.getElementById("world");
 var $leftPanel = document.getElementById("left-panel");
@@ -58,13 +56,13 @@ var $inspectorEmpty = document.getElementById("inspector-empty");
 var $inspectorContent = document.getElementById("inspector-content");
 var $inspTitle = document.getElementById("insp-title");
 var $inspSwatches = document.getElementById("insp-swatches");
-var $inspX = document.getElementById("insp-x");
-var $inspY = document.getElementById("insp-y");
-var $inspW = document.getElementById("insp-w");
-var $inspH = document.getElementById("insp-h");
+var $inspX = document.getElementById("insp-x"),
+  $inspY = document.getElementById("insp-y");
+var $inspW = document.getElementById("insp-w"),
+  $inspH = document.getElementById("insp-h");
 var $inspNotes = document.getElementById("insp-notes");
-var $inspFrameLine = null;
-var $inspFrameLineButtons = [];
+var $inspFrameLine = null,
+  $inspFrameLineButtons = [];
 var $imageInput = document.getElementById("image-input");
 var $importInput = document.getElementById("import-input");
 var $toast = document.getElementById("toast");
@@ -75,14 +73,14 @@ var $modeDDBtn = document.getElementById("mode-dropdown-btn");
 var $modeDDMenu = document.getElementById("mode-dropdown-menu");
 var $modeDDLabel = document.getElementById("mode-dropdown-label");
 
-var $svg = null;
-var $svgBack = null;
-var $selectionBox = null;
-var $connContextMenu = null;
+var $svg = null,
+  $svgBack = null,
+  $selectionBox = null,
+  $connContextMenu = null;
 
 /* ====================================================
-     UTILITY
-     ==================================================== */
+   UTILITY
+   ==================================================== */
 var uid = () => "id" + Math.random().toString(36).slice(2, 10);
 
 function hexToRgba(hex, alpha) {
@@ -1211,208 +1209,6 @@ function drawSnapGuides(vLine, hLine) {
   $svg.appendChild(g);
 }
 
-/* ====================================================
-     CONNECTING DRAG STATE
-     ==================================================== */
-var connDrag = null;
-var connAnimId = null;
-var belly = { x: 0, y: 0, vx: 0, vy: 0 };
-var settleAnim = null;
-
-function startConnectionDrag(e, card) {
-  if (mode === "view") return;
-  e.stopPropagation();
-  e.preventDefault();
-
-  $svg.classList.add("dragging");
-  if ($svgBack) $svgBack.classList.add("dragging");
-
-  var wm = screenToWorld(e.clientX, e.clientY);
-  connDrag = {
-    fromId: card.id,
-    mouseX: wm.x,
-    mouseY: wm.y,
-    targetId: null,
-    hoverInvalid: false,
-  };
-
-  var fp = getConnPoint(card);
-  belly.x = fp.x;
-  belly.y = fp.y;
-  belly.vx = 0;
-  belly.vy = 0;
-
-  window.addEventListener("pointermove", onConnDragMove);
-  window.addEventListener("pointerup", onConnDragUp, { once: true });
-  window.addEventListener("pointercancel", onConnDragUp, { once: true });
-
-  cancelAnimationFrame(connAnimId);
-  connAnimId = requestAnimationFrame(animConnDrag);
-}
-
-function onConnDragMove(e) {
-  if (!connDrag) return;
-  var wm = screenToWorld(e.clientX, e.clientY);
-  connDrag.mouseX = wm.x;
-  connDrag.mouseY = wm.y;
-
-  var el = document.elementFromPoint(e.clientX, e.clientY);
-  var cardEl = el && el.closest(".card");
-  var hovId = cardEl ? cardEl.dataset.cardId : null;
-
-  var validTarget = null;
-  var hoverInvalid = false;
-
-  if (hovId && hovId !== connDrag.fromId) {
-    var alreadyLinked = state.connections.some(
-      (c) => c.fromId === connDrag.fromId && c.toId === hovId,
-    );
-    if (
-      alreadyLinked ||
-      hasParent(hovId) ||
-      wouldCreateCycle(connDrag.fromId, hovId)
-    )
-      hoverInvalid = true;
-    else validTarget = hovId;
-  }
-
-  connDrag.targetId = validTarget;
-  connDrag.hoverInvalid = hoverInvalid;
-
-  $world.querySelectorAll(".card").forEach((c) => {
-    c.classList.toggle("conn-target", c.dataset.cardId === validTarget);
-    c.classList.toggle(
-      "conn-invalid",
-      hoverInvalid && c.dataset.cardId === hovId,
-    );
-  });
-}
-
-function onConnDragUp() {
-  $svg.classList.remove("dragging");
-  if ($svgBack) $svgBack.classList.remove("dragging");
-  window.removeEventListener("pointermove", onConnDragMove);
-  cancelAnimationFrame(connAnimId);
-  connAnimId = null;
-
-  $world
-    .querySelectorAll(".card.conn-target, .card.conn-invalid")
-    .forEach((c) => c.classList.remove("conn-target", "conn-invalid"));
-
-  var linkedConn = null;
-  if (connDrag && connDrag.targetId) {
-    var fromCard = getCard(connDrag.fromId);
-    var toCard = getCard(connDrag.targetId);
-    if (fromCard && toCard) {
-      linkedConn = {
-        id: uid(),
-        fromId: connDrag.fromId,
-        toId: connDrag.targetId,
-        layer: "front",
-      };
-      state.connections.push(linkedConn);
-
-      // Inherit group from parent to child and descendants
-      if (fromCard && toCard) {
-        var parentGroup = fromCard.groupId;
-        var childAndDescendants = [toCard.id, ...getAllDescendants(toCard.id)];
-        childAndDescendants.forEach(function (id) {
-          var c = getCard(id);
-          if (c) c.groupId = parentGroup;
-        });
-      }
-
-      renderFrameList();
-      pushHistory();
-      save();
-    }
-  } else if (connDrag && connDrag.hoverInvalid) {
-    toast("Cannot link — frame already has a parent or would create a cycle");
-  }
-
-  var lastBellyX = belly.x;
-  var lastBellyY = belly.y;
-  connDrag = null;
-
-  if (linkedConn) {
-    var fromCard = getCard(linkedConn.fromId);
-    var toCard = getCard(linkedConn.toId);
-    if (fromCard && toCard)
-      startSettleAnim(linkedConn.id, fromCard, toCard, lastBellyX, lastBellyY);
-  }
-
-  renderConnections();
-}
-
-function animConnDrag() {
-  if (!connDrag) return;
-  var fromCard = getCard(connDrag.fromId);
-  if (!fromCard) return;
-
-  var fp = getConnPoint(fromCard);
-  var { mouseX, mouseY } = connDrag;
-  var dx = mouseX - fp.x;
-  var dy = mouseY - fp.y;
-  var dist = Math.hypot(dx, dy);
-
-  var targetX = (fp.x + mouseX) / 2;
-  var targetY = (fp.y + mouseY) / 2 + dist * 0.28 + 36;
-
-  var k = 0.09;
-  var grav = 1.5;
-  var damp = 0.86;
-
-  belly.vx += (targetX - belly.x) * k;
-  belly.vy += (targetY - belly.y) * k + grav;
-  belly.vx *= damp;
-  belly.vy *= damp;
-  belly.x += belly.vx;
-  belly.y += belly.vy;
-
-  renderConnections();
-  connAnimId = requestAnimationFrame(animConnDrag);
-}
-
-function easeOutBack(t) {
-  var c1 = 1.7,
-    c3 = c1 + 1;
-  return 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2);
-}
-
-function startSettleAnim(connId, fromCard, toCard, startX, startY) {
-  var fp = getConnPoint(fromCard);
-  var tp = getConnPoint(toCard);
-  var end = restBelly(fp, tp);
-  settleAnim = {
-    connId,
-    startX,
-    startY,
-    endX: end.x,
-    endY: end.y,
-    curX: startX,
-    curY: startY,
-    startTime: performance.now(),
-    duration: 380,
-  };
-  requestAnimationFrame(stepSettleAnim);
-}
-
-function stepSettleAnim(now) {
-  if (!settleAnim) return;
-  var t = Math.min(1, (now - settleAnim.startTime) / settleAnim.duration);
-  var eased = easeOutBack(t);
-  settleAnim.curX =
-    settleAnim.startX + (settleAnim.endX - settleAnim.startX) * eased;
-  settleAnim.curY =
-    settleAnim.startY + (settleAnim.endY - settleAnim.startY) * eased;
-  renderConnections();
-  if (t < 1) requestAnimationFrame(stepSettleAnim);
-  else {
-    settleAnim = null;
-    renderConnections();
-  }
-}
-
 function renderStaticString(conn, from, to, targetSvg) {
   var svgTarget = targetSvg || $svg;
   var isBack = svgTarget === $svgBack;
@@ -1470,58 +1266,6 @@ function renderSettlingString(conn, from, to, targetSvg) {
   g.appendChild(createTack(fp.x, fp.y, { filterSuffix }));
   g.appendChild(createTack(tp.x, tp.y, { pop: true, filterSuffix }));
   svgTarget.appendChild(g);
-}
-
-function renderDragString() {
-  var fromCard = getCard(connDrag.fromId);
-  if (!fromCard) return;
-
-  var fp = getConnPoint(fromCard);
-  var { mouseX, mouseY, targetId, hoverInvalid } = connDrag;
-  var d = `M ${fp.x} ${fp.y} Q ${belly.x} ${belly.y} ${mouseX} ${mouseY}`;
-
-  var isValid = !!targetId;
-  var isInvalid = hoverInvalid && !isValid;
-  var color = isValid
-    ? "rgba(111,227,200,0.85)"
-    : isInvalid
-      ? "rgba(255,123,114,0.75)"
-      : "rgba(228,190,112,0.62)";
-  var dash = isValid ? "none" : "7 5";
-
-  var shadow = svgEl("path", {
-    d,
-    fill: "none",
-    stroke: "rgba(0,0,0,0.3)",
-    "stroke-width": "2.5",
-    "stroke-linecap": "round",
-  });
-  var thread = svgEl("path", {
-    d,
-    fill: "none",
-    stroke: color,
-    "stroke-width": "1.6",
-    "stroke-linecap": "round",
-    "stroke-dasharray": dash,
-    filter: "url(#loom-sf)",
-  });
-  var endCircle = svgEl("circle", {
-    cx: mouseX,
-    cy: mouseY,
-    r: "5",
-    fill: isValid
-      ? "rgba(111,227,200,0.55)"
-      : isInvalid
-        ? "rgba(255,123,114,0.45)"
-        : "rgba(228,190,112,0.4)",
-    stroke: "rgba(255,255,255,0.35)",
-    "stroke-width": "1",
-  });
-
-  $svg.appendChild(shadow);
-  $svg.appendChild(thread);
-  $svg.appendChild(createTack(fp.x, fp.y));
-  $svg.appendChild(endCircle);
 }
 
 function renderConnections() {
@@ -1687,6 +1431,42 @@ function initConnContextMenu() {
     },
     true,
   );
+}
+
+function renderGroupBorders() {
+  if (!$svgBack) return;
+  $svgBack.querySelectorAll(".group-border").forEach((el) => el.remove());
+  state.groups.forEach((group) => {
+    if (!group.showBorder) return;
+    const bounds = getGroupCardsBounds(group);
+    if (!bounds) return;
+    const pad = 12,
+      x = bounds.minX - pad,
+      y = bounds.minY - pad,
+      w = bounds.maxX - bounds.minX + pad * 2,
+      h = bounds.maxY - bounds.minY + pad * 2;
+    const color = group.color || "var(--accent)";
+    const g = svgEl("g");
+    g.classList.add("group-border");
+    g.setAttribute("data-group-id", group.id);
+    g.appendChild(
+      svgEl("rect", {
+        x,
+        y,
+        width: w,
+        height: h,
+        rx: 12,
+        ry: 12,
+        fill: "none",
+        stroke: color,
+        "stroke-width": "2",
+        "stroke-dasharray": "8 4",
+        "stroke-opacity": "0.55",
+        "pointer-events": "none",
+      }),
+    );
+    $svgBack.appendChild(g);
+  });
 }
 
 window.LoomModules = window.LoomModules || {};
