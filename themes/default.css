@@ -26,6 +26,9 @@
 
   --radius: 10px;
   --radius-sm: 7px;
+
+  --syn-function: #8fb4ff;
+  --syn-class: #d6b4ff;
 }
 
 * {
@@ -180,6 +183,386 @@ select {
   height: 20px;
   background: var(--panel-border);
   margin: 0 4px;
+}
+
+/* ============================================================
+   Codeblock element – separate stylesheet
+   ============================================================ */
+
+.codeblock-card .card-body {
+  padding: 8px;
+}
+
+.codeblock-preview {
+  margin: 0;
+  padding: 10px;
+  background: rgba(0, 0, 0, 0.25);
+  border-radius: 6px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--ink-dim);
+  white-space: pre-wrap;
+  overflow: hidden;
+  flex: 1;
+  min-height: 0;
+  position: relative;
+}
+
+.codeblock-preview::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 30px;
+  background: linear-gradient(transparent, var(--card-bg, #21252d));
+  pointer-events: none;
+}
+
+/* Expand button */
+.codeblock-expand-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--ink-faint);
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.15s ease, background 0.12s ease, color 0.12s ease;
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
+.card:hover .codeblock-expand-btn,
+.card.selected .codeblock-expand-btn {
+  opacity: 1;
+}
+
+.codeblock-expand-btn:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--ink);
+}
+
+/* Hide in preview mode */
+.codeblock-card.card-preview .codeblock-expand-btn {
+  display: none;
+}
+
+.new-element-icon-codeblock {
+  transform: translateY(3px);
+}
+
+/* ============================================================
+   Full-screen code viewer modal
+   ============================================================ */
+.codeblock-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 30px;
+}
+
+.codeblock-modal-content {
+  background: var(--panel-solid);
+  border: 1px solid rgba(255, 255, 255, 0.11);
+  border-radius: 14px;
+  width: 100%;
+  max-width: 800px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+}
+
+.codeblock-modal-header {
+  display: flex;
+  align-items: center;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--panel-border);
+}
+
+.codeblock-modal-title {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--ink-dim);
+  flex: 1;
+}
+
+.codeblock-modal-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  border: none;
+  background: transparent;
+  color: var(--ink-faint);
+  cursor: pointer;
+  font-size: 18px;
+  transition: background 0.12s ease, color 0.12s ease;
+}
+
+.codeblock-modal-close:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--ink);
+}
+
+.codeblock-modal-body {
+  flex: 1;
+  overflow: auto;
+  padding: 16px;
+}
+
+.codeblock-modal-pre {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--ink);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* Custom inspector textarea */
+.codeblock-inspector-code {
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+
+/* Language & row count badge (card header) */
+.codeblock-meta {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--ink-faint);
+  margin-left: auto;
+  margin-right: 6px;
+  white-space: nowrap;
+  user-select: none;
+}
+
+/* Language & row count in modal */
+.codeblock-modal-meta {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--ink-faint);
+  margin-left: 12px;
+}
+
+/* ---- Header left group (keeps title + meta together) ---- */
+.codeblock-header-left {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+}
+
+/* Ensure the title input still behaves as before */
+.codeblock-header-left .card-title {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+/* ============================================================
+   VIDEOCLIP ELEMENT
+   ============================================================ */
+
+.videoclip-body {
+  padding: 8px;
+}
+
+.videoclip-thumb-wrapper {
+  position: relative;
+  width: 100%;
+  padding-top: 56.25%;
+  /* 16:9 aspect ratio */
+  background: rgba(0, 0, 0, 0.35);
+  border-radius: 6px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: filter 0.15s ease;
+}
+
+.videoclip-thumb-wrapper:hover .videoclip-thumb {
+  filter: brightness(0.7);
+}
+
+.videoclip-thumb {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: filter 0.2s ease;
+}
+
+.videoclip-play-overlay {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 52px;
+  height: 52px;
+  background: rgba(0, 0, 0, 0.55);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  transition: background 0.15s ease, transform 0.15s ease;
+}
+
+.videoclip-thumb-wrapper:hover .videoclip-play-overlay {
+  background: rgba(0, 0, 0, 0.75);
+  transform: translate(-50%, -50%) scale(1.08);
+}
+
+.videoclip-info {
+  font-size: 11.5px;
+  color: var(--ink-dim);
+  margin-top: 6px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Expand button (header) */
+.videoclip-expand-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--ink-faint);
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.15s ease, background 0.12s ease, color 0.12s ease;
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
+.card:hover .videoclip-expand-btn,
+.card.selected .videoclip-expand-btn {
+  opacity: 1;
+}
+
+.videoclip-expand-btn:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--ink);
+}
+
+/* Hide expand button in preview mode */
+.videoclip-card.card-preview .videoclip-expand-btn {
+  display: none;
+}
+
+/* ============================================================
+   VIDEO MODAL
+   ============================================================ */
+.videoclip-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 30px;
+}
+
+.videoclip-modal-content {
+  background: var(--panel-solid);
+  border: 1px solid rgba(255, 255, 255, 0.11);
+  border-radius: 14px;
+  width: 100%;
+  max-width: 960px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+}
+
+.videoclip-modal-header {
+  display: flex;
+  align-items: center;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--panel-border);
+}
+
+.videoclip-modal-title {
+  font-family: var(--font-display);
+  font-size: 14px;
+  color: var(--ink);
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.videoclip-modal-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  border: none;
+  background: transparent;
+  color: var(--ink-faint);
+  cursor: pointer;
+  font-size: 18px;
+  transition: background 0.12s ease, color 0.12s ease;
+}
+
+.videoclip-modal-close:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--ink);
+}
+
+.videoclip-modal-body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #000;
+  border-radius: 0 0 14px 14px;
+  overflow: hidden;
+  position: relative;
+}
+
+/* Make the iframe/video fill the body */
+.videoclip-modal-body iframe,
+.videoclip-modal-body video {
+  width: 100%;
+  height: 100%;
+  border: none;
+}
+
+/* When only a link is shown, centre it */
+.videoclip-modal-body a {
+  color: var(--accent);
+  font-size: 14px;
+  text-decoration: underline;
 }
 
 /* ============================================================
@@ -352,6 +735,12 @@ body.view-mode .mode-dropdown-btn:hover {
 
 body.view-mode .mode-dropdown-btn .dropdown-chevron {
   color: var(--amber);
+}
+
+/* Hide preview toggle and expand code button in view mode */
+body.view-mode .card-preview-toggle,
+body.view-mode .codeblock-expand-btn {
+  display: none !important;
 }
 
 /* ============================================================
@@ -2720,6 +3109,38 @@ body.panel-resizing * {
 #toast.show {
   opacity: 1;
   transform: translateX(-50%) translateY(0);
+}
+
+/* ============================================================
+   CUSTOM SCROLLBARS – all elements, theme-aware
+   ============================================================ */
+/* Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--ink-faint) var(--panel-border);
+}
+
+/* Chrome / Edge / Safari */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--panel-border);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--ink-faint);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--ink-dim);
+}
+
+::-webkit-scrollbar-corner {
+  background: var(--panel-border);
 }
 
 /* ============================================================
