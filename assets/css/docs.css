@@ -1,17 +1,22 @@
-/* ============================================================
-   docs.css — Documentation page supplementary styles
-   Place in styles/docs.css alongside loom-ui.css.
-   Inherits all CSS custom properties from loom-ui.css / themes.
-   ============================================================ */
+/* critical overrides for the scrollable docs context.
+   the loom ui stylesheet (default.css) sets html,body { overflow:hidden; height:100% }
+   which works beautifully for the app canvas but turns a docs
+   page into a static screenshot. we fix that here. */
+html.docs-root {
+  height: auto;
+  min-height: 100%;
+  overflow: visible;
+}
 
-/* ── Critical overrides for scrollable docs context ────────
-   loom-ui.css sets html,body { overflow:hidden; height:100% }
-   which works for the app canvas but breaks a docs page.     */
-html.docs-root  { height: auto; min-height: 100%; overflow: visible; }
-body.docs-page  { height: auto; min-height: 100vh; overflow: auto; }
+body.docs-page {
+  height: auto;
+  min-height: 100vh;
+  overflow: auto;
+}
 
-/* Make the topbar sticky in docs context (app uses it as a
-   flex-shrink child inside #app; docs has no #app wrapper). */
+/* the topbar normally lives as a flex-shrink child inside #app,
+   but the docs page has no #app wrapper. so we make it sticky
+   ourselves — because the topbar deserves to follow you around. */
 body.docs-page #topbar {
   position: sticky;
   top: 0;
@@ -19,7 +24,7 @@ body.docs-page #topbar {
   width: 100%;
 }
 
-/* ── Layout ──────────────────────────────────────────────── */
+/* layout --- a sidebar and a content area, the classic duo */
 .docs-layout {
   display: flex;
   min-height: calc(100vh - 52px);
@@ -42,16 +47,24 @@ body.docs-page #topbar {
   scroll-behavior: smooth;
 }
 
-.docs-sidebar::-webkit-scrollbar { width: 4px; }
+.docs-sidebar::-webkit-scrollbar {
+  width: 4px;
+}
+
 .docs-sidebar::-webkit-scrollbar-thumb {
   background: rgba(255, 255, 255, 0.08);
   border-radius: 4px;
 }
 
-.docs-content { flex: 1; min-width: 0; }
+.docs-content {
+  flex: 1;
+  min-width: 0;
+}
 
-/* ── Sidebar navigation ──────────────────────────────────── */
-.docs-nav { padding: 12px 0 32px; }
+/* sidebar navigation --- where all the links live, quietly */
+.docs-nav {
+  padding: 12px 0 32px;
+}
 
 .docs-nav-label {
   display: block;
@@ -63,7 +76,9 @@ body.docs-page #topbar {
   padding: 18px 14px 7px;
 }
 
-.docs-nav-label:first-child { padding-top: 10px; }
+.docs-nav-label:first-child {
+  padding-top: 10px;
+}
 
 .docs-nav-section {
   padding: 0 8px 4px;
@@ -105,9 +120,11 @@ body.docs-page #topbar {
   transition: background .12s ease;
 }
 
-.docs-nav-link.active .docs-nav-dot { background: var(--accent); }
+.docs-nav-link.active .docs-nav-dot {
+  background: var(--accent);
+}
 
-/* ── Hero ────────────────────────────────────────────────── */
+/* hero --- the big banner at the top, trying to impress */
 .docs-hero {
   display: flex;
   align-items: center;
@@ -115,10 +132,13 @@ body.docs-page #topbar {
   padding: 56px 64px 52px;
   border-bottom: 1px solid var(--panel-border);
   background: radial-gradient(ellipse 60% 120% at 110% 40%,
-    rgba(111, 227, 200, 0.055) 0%, transparent 65%);
+      rgba(111, 227, 200, 0.055) 0%, transparent 65%);
 }
 
-.docs-hero-text { flex: 1; min-width: 0; }
+.docs-hero-text {
+  flex: 1;
+  min-width: 0;
+}
 
 .docs-hero-eyebrow {
   font-family: var(--font-mono);
@@ -175,14 +195,16 @@ body.docs-page #topbar {
     0 24px 60px rgba(0, 0, 0, 0.55);
 }
 
-/* ── Sections ────────────────────────────────────────────── */
+/* sections --- the actual meat of the docs, one bite at a time */
 .docs-section {
   padding: 52px 64px;
   border-bottom: 1px solid var(--panel-border);
   scroll-margin-top: 52px;
 }
 
-.docs-section:last-child { border-bottom: none; }
+.docs-section:last-child {
+  border-bottom: none;
+}
 
 .docs-section-header {
   display: flex;
@@ -261,7 +283,7 @@ body.docs-page #topbar {
   text-underline-offset: 2px;
 }
 
-/* ── Inline code ─────────────────────────────────────────── */
+/* inline code --- tiny monospace islands in a sea of prose */
 .docs-section code {
   font-family: var(--font-mono);
   font-size: 0.875em;
@@ -271,7 +293,7 @@ body.docs-page #topbar {
   color: var(--accent);
 }
 
-/* ── Callouts ────────────────────────────────────────────── */
+/* callouts --- tip and warning boxes that gently (or not) interrupt */
 .docs-callout {
   display: flex;
   gap: 12px;
@@ -307,7 +329,7 @@ body.docs-page #topbar {
   max-width: none !important;
 }
 
-/* ── Steps list ──────────────────────────────────────────── */
+/* steps list --- numbered instructions, because we're professional like that */
 .docs-steps {
   display: flex;
   flex-direction: column;
@@ -339,7 +361,9 @@ body.docs-page #topbar {
   margin-top: 1px;
 }
 
-.docs-step-body { flex: 1; }
+.docs-step-body {
+  flex: 1;
+}
 
 .docs-step-title {
   font-size: 13px;
@@ -354,7 +378,8 @@ body.docs-page #topbar {
   color: var(--ink-dim);
 }
 
-/* ── Feature grid ────────────────────────────────────────── */
+/* feature grid --- a 2-column grid for feature cards,
+   because one feature at a time is too slow */
 .docs-feature-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -365,7 +390,7 @@ body.docs-page #topbar {
 
 .docs-feature-card {
   padding: 16px;
-  background: linear-gradient(180deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.01) 100%);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0.01) 100%);
   border: 1px solid var(--panel-border);
   border-radius: var(--radius-sm);
 }
@@ -397,7 +422,8 @@ body.docs-page #topbar {
   color: var(--ink-faint);
 }
 
-/* ── Shortcut table ──────────────────────────────────────── */
+/* shortcut table --- a neat table of keyboard shortcuts,
+   for people who prefer fingers over mice */
 .docs-shortcut-table {
   width: 100%;
   max-width: 620px;
@@ -437,7 +463,9 @@ body.docs-page #topbar {
   color: var(--ink);
 }
 
-.docs-shortcut-table tbody tr:last-child td { border-bottom: none; }
+.docs-shortcut-table tbody tr:last-child td {
+  border-bottom: none;
+}
 
 .docs-shortcut-table tbody tr:hover td {
   background: rgba(255, 255, 255, 0.02);
@@ -450,12 +478,12 @@ body.docs-page #topbar {
   letter-spacing: 1.3px;
   color: var(--ink-faint);
   padding: 12px 14px 6px !important;
-  background: rgba(0,0,0,0.1);
-  border-bottom: 1px solid rgba(255,255,255,0.04) !important;
+  background: rgba(0, 0, 0, 0.1);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04) !important;
   font-weight: 500;
 }
 
-/* ── Inline definition rows ──────────────────────────────── */
+/* inline definition rows --- key-value pairs that pretend to be a table */
 .docs-def-list {
   display: flex;
   flex-direction: column;
@@ -474,9 +502,13 @@ body.docs-page #topbar {
   font-size: 12.5px;
 }
 
-.docs-def-row:last-child { border-bottom: none; }
+.docs-def-row:last-child {
+  border-bottom: none;
+}
 
-.docs-def-row:hover { background: rgba(255,255,255,0.018); }
+.docs-def-row:hover {
+  background: rgba(255, 255, 255, 0.018);
+}
 
 .docs-def-key {
   width: 140px;
@@ -486,7 +518,7 @@ body.docs-page #topbar {
   font-weight: 600;
   font-size: 12.5px;
   color: var(--ink);
-  border-right: 1px solid rgba(255,255,255,0.05);
+  border-right: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 .docs-def-val {
@@ -496,9 +528,75 @@ body.docs-page #topbar {
   color: var(--ink-dim);
 }
 
-/* ── Responsive ──────────────────────────────────────────── */
+/* guide and back‑link styles --- directional arrows that flip
+   around when you hover, because navigation should have flair */
+
+/* remove the dot for guide links and replace with a right-pointing arrow */
+.docs-nav-link--guide .docs-nav-dot {
+  display: none;
+}
+
+.docs-nav-link--guide::before {
+  content: "›";
+  display: inline-block;
+  width: 12px;
+  margin-right: 4px;
+  font-size: 15px;
+  line-height: 1;
+  color: var(--ink-faint);
+  transition: color 0.12s ease;
+}
+
+.docs-nav-link--guide:hover::before {
+  color: var(--accent);
+}
+
+/* guide links are slightly toned down by default --- they're not as important */
+.docs-nav-link--guide {
+  color: var(--ink-faint);
+}
+
+.docs-nav-link--guide:hover {
+  color: var(--ink);
+}
+
+/* back‑to‑main‑docs link: a right arrow that rotates into a left arrow
+   on hover, like a visual backspace */
+.docs-nav-link--back .docs-nav-dot {
+  display: none;
+}
+
+.docs-nav-link--back::before {
+  content: "\2192";
+  /* → right arrow --- stays perfectly centred, no layout shift when it rotates */
+  display: inline-block;
+  margin-right: 4px;
+  font-size: 15px;
+  line-height: 1;
+  color: var(--ink-faint);
+  transition: transform 0.25s ease, color 0.25s ease;
+}
+
+.docs-nav-link--back:hover::before {
+  transform: rotate(180deg);
+  /* becomes ← (backspace symbol) without jumping --- a tiny magic trick */
+  color: var(--accent);
+}
+
+.docs-nav-link--back {
+  color: var(--ink-faint);
+}
+
+.docs-nav-link--back:hover {
+  color: var(--ink);
+}
+
+/* responsive --- when the screen gets narrow, things disappear or stack,
+   because mobile users deserve a readable page too */
 @media (max-width: 900px) {
-  .docs-sidebar { display: none; }
+  .docs-sidebar {
+    display: none;
+  }
 
   .docs-hero {
     flex-direction: column;
@@ -506,18 +604,36 @@ body.docs-page #topbar {
     padding: 40px 28px 36px;
   }
 
-  .docs-hero h1 { font-size: 26px; }
-  .docs-hero-figure { display: none; }
-  .docs-section { padding: 40px 28px; }
-  .docs-feature-grid { grid-template-columns: 1fr; }
+  .docs-hero h1 {
+    font-size: 26px;
+  }
+
+  .docs-hero-figure {
+    display: none;
+  }
+
+  .docs-section {
+    padding: 40px 28px;
+  }
+
+  .docs-feature-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (max-width: 600px) {
+
   .docs-hero,
-  .docs-section { padding: 28px 20px; }
+  .docs-section {
+    padding: 28px 20px;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
+
   .docs-nav-link,
-  .docs-nav-dot { transition: none !important; }
+  .docs-nav-dot,
+  .docs-nav-link--back::before {
+    transition: none !important;
+  }
 }
