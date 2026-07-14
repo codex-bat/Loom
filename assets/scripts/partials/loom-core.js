@@ -169,7 +169,7 @@ function normalizeConnection(conn) {
 function isCardDragBlockedTarget(target) {
   if (!target || typeof target.closest !== "function") return false;
   return !!target.closest(
-    "input, textarea, button, a, [contenteditable='true'], .card-pin-btn, .card-toolbar, .resize-handle, .block-link-input, .block-link, .block-controls, .block-drag-handle, .block-del",
+    "input, textarea, button, a, [contenteditable='true'], .card-pin-btn, .card-toolbar, .resize-handle, .block-link-input, .block-link, .block-controls, .block-drag-handle, .block-del, [data-block-drag]"
   );
 }
 
