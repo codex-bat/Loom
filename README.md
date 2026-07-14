@@ -18,3 +18,7 @@ visit [Loom](https://loom.codexbat.dev/). :3
 - **Top bar**: Export / Import as JSON for backups or sharing, Clear to wipe the board.
 - **Persistence**: everything autosaves to the browser's `localStorage`, so it survives reloads on the same device/browser. Use Export if you want a portable backup or want to move the board to another machine — `localStorage` has a few MB of headroom, so if you add lots of large images, export periodically.
 - and man, so much more that I added since hten. I'm too lazy on listing it all. I pulled an all-nighter tonight for this.
+
+### Hey!
+
+- for a more extensive documentation on [Loom](https://loom.codexbat.dev/)'s functionality, check out the docs I made: [Docs](https://loom.codexbat.dev/docs)!
