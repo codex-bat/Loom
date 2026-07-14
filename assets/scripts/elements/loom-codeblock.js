@@ -1,5 +1,6 @@
 // ============================================================
 //   LOOM ELEMENT: CODEBLOCK
+//   (now with frame styling toggle – colour & line)
 // ============================================================
 
 function buildCodeblockEl(card, num) {
@@ -17,6 +18,16 @@ function buildCodeblockEl(card, num) {
   el.style.setProperty("--card-color-dim", hexToRgba(color, 0.4));
   el.style.setProperty("--card-color-mid", hexToRgba(color, 0.7));
   el.style.setProperty("--card-color-glow", hexToRgba(color, 0.22));
+
+  // --- Frame line tag (if not "none") ---
+  var frameLine = normalizeFrameLine(card.frameLine);
+  if (frameLine !== "none") {
+    el.dataset.frameLine = frameLine;
+    var tag = document.createElement("div");
+    tag.className = "card-tag";
+    tag.style.background = color;
+    el.appendChild(tag);
+  }
 
   // --- Header left group (num, title, meta) ---
   var headerLeft = document.createElement("div");
@@ -46,7 +57,7 @@ function buildCodeblockEl(card, num) {
     save();
   });
 
-  // Language + line count badge – now inside the left group
+  // Language + line count badge
   var meta = document.createElement("span");
   meta.className = "codeblock-meta";
   var lang =
@@ -66,12 +77,11 @@ function buildCodeblockEl(card, num) {
   headerLeft.appendChild(titleInput);
   headerLeft.appendChild(meta);
 
-  // --- Buttons (right side) ---
+  // --- Buttons ---
   var pinBtn = makePinButton(card);
   var previewToggle = makePreviewToggle(card);
   var expandBtn = makeExpandButton(card);
 
-  // --- Assemble header ---
   var header = document.createElement("div");
   header.className = "card-header";
   header.appendChild(headerLeft);
@@ -100,7 +110,7 @@ function buildCodeblockEl(card, num) {
   handle.dataset.tooltip = "Drag to resize";
   el.appendChild(handle);
 
-  // Drag / interaction (same as frames)
+  // Drag / interaction
   el.addEventListener("pointerdown", function (e) {
     if (e.button === 1) {
       startPanning(e, el);
@@ -135,7 +145,6 @@ function makeExpandButton(card) {
   btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true"><rect x="2" y="2" width="10" height="10" rx="1.5" stroke="currentColor" stroke-width="1.5"/><path d="M5 5h4v4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
   btn.addEventListener("click", function (e) {
     e.stopPropagation();
-    if (mode === "view") return; // still allow viewing
     openCodeModal(card);
   });
   btn.addEventListener("pointerdown", function (e) {
@@ -151,7 +160,6 @@ function openCodeModal(card) {
   var content = document.createElement("div");
   content.className = "codeblock-modal-content";
 
-  // Header
   var modalHeader = document.createElement("div");
   modalHeader.className = "codeblock-modal-header";
 
@@ -184,7 +192,6 @@ function openCodeModal(card) {
   modalHeader.appendChild(closeBtn);
   content.appendChild(modalHeader);
 
-  // Modal body
   var modalBody = document.createElement("div");
   modalBody.className = "codeblock-modal-body";
   var pre = document.createElement("pre");
@@ -200,12 +207,10 @@ function openCodeModal(card) {
   modal.appendChild(content);
   document.body.appendChild(modal);
 
-  // Close on background click
   modal.addEventListener("click", function (e) {
     if (e.target === modal) document.body.removeChild(modal);
   });
 
-  // Close on Escape
   function onKey(e) {
     if (e.key === "Escape") {
       document.body.removeChild(modal);
@@ -215,18 +220,99 @@ function openCodeModal(card) {
   window.addEventListener("keydown", onKey);
 }
 
-// Custom inspector – replaces the default one
+// Custom inspector – with frame styling toggle
 function renderCodeblockInspector(card) {
   var container = document.createElement("div");
 
-  // Title
+  // --- Frame styling block (hidden) ---
+  var stylingWrap = document.createElement("div");
+  stylingWrap.style.display = "none";
+
+  // Tag color
+  var colorField = document.createElement("div");
+  colorField.className = "field";
+  var colorLabel = document.createElement("label");
+  colorLabel.textContent = "Tag color";
+  var swatchRow = document.createElement("div");
+  swatchRow.className = "swatch-row";
+  SWATCHES.forEach(function (swColor) {
+    var sw = document.createElement("div");
+    sw.className = "swatch";
+    sw.style.background = swColor;
+    sw.dataset.color = swColor;
+    if (swColor === card.color) sw.classList.add("active");
+    sw.addEventListener("click", function () {
+      if (mode === "view" || selectedIds.size > 1) return;
+      card.color = swColor;
+      swatchRow.querySelectorAll(".swatch").forEach(function (s) {
+        s.classList.toggle("active", s.dataset.color === swColor);
+      });
+      refreshCardEl(card);
+      pushHistoryDebounced();
+      save();
+    });
+    swatchRow.appendChild(sw);
+  });
+  colorField.appendChild(colorLabel);
+  colorField.appendChild(swatchRow);
+  stylingWrap.appendChild(colorField);
+
+  // Frame line
+  var lineField = document.createElement("div");
+  lineField.className = "field";
+  var lineLabel = document.createElement("label");
+  lineLabel.textContent = "Frame line";
+  var selector = document.createElement("div");
+  selector.className = "frame-line-selector";
+  var options = [
+    { value: "left", label: "Left" },
+    { value: "right", label: "Right" },
+    { value: "up", label: "Up" },
+    { value: "down", label: "Down" },
+    { value: "none", label: "None" },
+  ];
+  options.forEach(function (opt) {
+    var btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "frame-line-btn";
+    btn.dataset.value = opt.value;
+    btn.textContent = opt.label;
+    if (normalizeFrameLine(card.frameLine) === opt.value)
+      btn.classList.add("active");
+    btn.addEventListener("click", function () {
+      if (mode === "view" || selectedIds.size > 1) return;
+      var newValue = opt.value;
+      card.frameLine = newValue;
+      selector.querySelectorAll(".frame-line-btn").forEach(function (b) {
+        b.classList.toggle("active", b.dataset.value === newValue);
+      });
+      refreshCardEl(card);
+      pushHistoryDebounced();
+      save();
+    });
+    selector.appendChild(btn);
+  });
+  lineField.appendChild(lineLabel);
+  lineField.appendChild(selector);
+  stylingWrap.appendChild(lineField);
+
+  // --- Title field with inline toggle button ---
   var titleField = document.createElement("div");
   titleField.className = "field";
+
   var titleLabel = document.createElement("label");
   titleLabel.textContent = "Title";
+  titleField.appendChild(titleLabel);
+
+  var titleRow = document.createElement("div");
+  titleRow.className = "videoclip-file-row"; // reusing existing flex row class
+
   var titleInp = document.createElement("input");
   titleInp.type = "text";
   titleInp.value = card.title || "";
+  titleInp.placeholder = "Codeblock title";
+  titleInp.style.flex = "1";
+  titleInp.style.minWidth = "0";
   titleInp.addEventListener("input", function () {
     card.title = titleInp.value;
     var titleEl = $world.querySelector(
@@ -237,11 +323,26 @@ function renderCodeblockInspector(card) {
     pushHistoryDebounced();
     save();
   });
-  titleField.appendChild(titleLabel);
-  titleField.appendChild(titleInp);
-  container.appendChild(titleField);
+  titleRow.appendChild(titleInp);
 
-  // Position grid
+  // Small square toggle button
+  var stylingToggleBtn = document.createElement("button");
+  stylingToggleBtn.type = "button";
+  stylingToggleBtn.className = "videoclip-file-clear";
+  stylingToggleBtn.innerHTML = "▸";
+  stylingToggleBtn.dataset.tooltip = "Frame styling";
+  stylingToggleBtn.addEventListener("click", function () {
+    var isOpen = stylingWrap.style.display !== "none";
+    stylingWrap.style.display = isOpen ? "none" : "";
+    stylingToggleBtn.innerHTML = isOpen ? "▸" : "▾";
+  });
+  titleRow.appendChild(stylingToggleBtn);
+  titleField.appendChild(titleRow);
+
+  container.appendChild(titleField);
+  container.appendChild(stylingWrap);
+
+  // --- Position grid ---
   var grid = document.createElement("div");
   grid.className = "field-grid";
 
@@ -325,6 +426,17 @@ function renderCodeblockInspector(card) {
   return container;
 }
 
+// Helper to refresh the card element (needed after colour/line change)
+function refreshCardEl(card) {
+  var el = $world.querySelector(`[data-card-id="${card.id}"]`);
+  if (!el) return;
+  if (el.parentNode) {
+    var num = parseInt(el.querySelector(".card-num").textContent, 10);
+    var newEl = buildCodeblockEl(card, num);
+    el.parentNode.replaceChild(newEl, el);
+  }
+}
+
 // Registration
 window.LoomElements = window.LoomElements || {};
 window.LoomElements["codeblock"] = {
@@ -349,6 +461,7 @@ window.LoomElements["codeblock"] = {
       color: SWATCHES[state.cards.length % SWATCHES.length],
       notes: "",
       code: "",
+      frameLine: "none", // default – line hidden
     };
   },
   render: function (card, num) {
