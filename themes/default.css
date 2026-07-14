@@ -565,6 +565,109 @@ select {
   text-decoration: underline;
 }
 
+/* -- File row in inspector -- */
+.videoclip-file-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Custom file button (mimics .btn-block) */
+.videoclip-file-btn {
+  padding: 7px 12px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--panel-border);
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--ink-dim);
+  font-size: 12.5px;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.12s ease, color 0.12s ease, border-color 0.12s ease;
+}
+
+.videoclip-file-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--ink);
+  border-color: rgba(255, 255, 255, 0.13);
+}
+
+/* File name text */
+.videoclip-file-name {
+  font-size: 11px;
+  color: var(--ink-dim);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 140px;
+}
+
+/* Clear button (small “✕”) */
+.videoclip-file-clear {
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--ink-faint);
+  cursor: pointer;
+  font-size: 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.12s ease, color 0.12s ease;
+}
+
+.videoclip-file-clear:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--ink);
+}
+
+/* “Open link” button in card header (match expand-btn) */
+.videoclip-link-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--ink-faint);
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.15s ease, background 0.12s ease, color 0.12s ease;
+  flex-shrink: 0;
+}
+
+.card:hover .videoclip-link-btn,
+.card.selected .videoclip-link-btn {
+  opacity: 1;
+}
+
+.videoclip-link-btn:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--ink);
+}
+
+/* Local video fallback icon */
+.videoclip-local-icon {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  z-index: 2;
+}
+
+.videoclip-source-section {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
 /* ============================================================
    CUSTOM MODE DROPDOWN
    ============================================================ */
@@ -3110,6 +3213,8 @@ body.panel-resizing * {
   opacity: 1;
   transform: translateX(-50%) translateY(0);
 }
+
+
 
 /* ============================================================
    CUSTOM SCROLLBARS – all elements, theme-aware
