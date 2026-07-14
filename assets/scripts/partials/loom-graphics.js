@@ -1,6 +1,4 @@
-/* ====================================================
-     VIEW (PAN / ZOOM)
-     ==================================================== */
+/* view (pan / zoom) --- keeps the board in sight even when you wander off the edge of the world */
 function applyView() {
   $world.style.transform = `translate(${state.view.x}px,${state.view.y}px) scale(${state.view.scale})`;
   var grid = 32 * state.view.scale;
@@ -41,7 +39,7 @@ function zoomAt(sx, sy, factor) {
 }
 
 function zoomToFit() {
-  // Filter out hidden cards
+  // ignore cards that are hiding --- they don't get to affect the view
   var visibleCards = state.cards.filter(function (c) {
     return !isCardHidden(c);
   });
@@ -76,13 +74,10 @@ function zoomToFit() {
   applyView();
 }
 
-/**
- * Pure bounding-box calculation over all cards in world space.
- * Shared by zoomToFit() and the storyboard image exporter
- * (see scripts/loom-export.js) so both "fit everything" features
- * always agree on what the full extent of the board is.
- * Returns null when the board is empty.
- */
+/* the full bounding box of all cards, in world space.
+   used by zoomToFit and the storyboard exporter so both always
+   agree on what "the whole board" actually means.
+   returns null when there's nothing to frame. */
 function getCardsBounds() {
   if (state.cards.length === 0) return null;
   var minX = Infinity,
@@ -101,7 +96,7 @@ function getCardsBounds() {
 var panCtx = null;
 function startPanning(e, captureEl) {
   if (mode === "view" && e.button === 0) {
-    // still allow ctrl/middle pan in view mode
+    // still let ctrl‑ or middle‑click pan work in view mode, because consistency is nice
   }
   setFrameDragActive(false);
   panCtx = {
@@ -149,9 +144,8 @@ function getCanvasPoint(e) {
   };
 }
 
-/* ====================================================
-     MARQUEE SELECTION
-     ==================================================== */
+/* marquee selection --- draw a box, pick the cards inside it,
+   simple as that (until you add shift) */
 var selectionBox = null;
 function initSelectionBox() {
   $selectionBox = document.createElement("div");
@@ -311,7 +305,7 @@ window.addEventListener("keyup", (e) => {
 window.addEventListener("keydown", (e) => {
   if (isEditableTarget(document.activeElement)) return;
 
-  // ── Undo / Redo ──────────────────────────────────────
+  // undo / redo --- the classic safety net
   if ((e.ctrlKey || e.metaKey) && e.key === "z" && !e.shiftKey) {
     e.preventDefault();
     undo();
@@ -328,7 +322,7 @@ window.addEventListener("keydown", (e) => {
     return;
   }
 
-  // ── Toggle preview all (delegates to the current element if possible) ──
+  // toggle preview all --- works on whatever element is in focus, usually
   if (
     (e.ctrlKey || e.metaKey) &&
     e.shiftKey &&
@@ -345,7 +339,7 @@ window.addEventListener("keydown", (e) => {
     return;
   }
 
-  // ── Select all frames ──────────────────────────────
+  // select all frames --- grab everything visible on the board
   if (
     (e.ctrlKey || e.metaKey) &&
     (e.key === "a" || e.key === "A") &&
@@ -364,7 +358,7 @@ window.addEventListener("keydown", (e) => {
     return;
   }
 
-  // ── Existing shortcuts ───────────────────────────────
+  // other shortcuts that have been here since forever
   if (mode !== "view" && (e.key === "n" || e.key === "N")) {
     const defaultDef = window.LoomElements && window.LoomElements["frame"];
     if (defaultDef && typeof defaultDef.factory === "function") {
@@ -376,7 +370,7 @@ window.addEventListener("keydown", (e) => {
       save();
       toast("Added Frame");
     } else {
-      // fallback: try any first element
+      // fallback: try the first registered element, whatever it is
       const first = Object.values(window.LoomElements || {})[0];
       if (first && typeof first.factory === "function") {
         const card = first.factory();
