@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en" class="docs-root">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+    <title>Loom Syntax — Code Highlighter</title>
+
+    <link rel="icon" type="image/png" href="/assets/favicons/favicon-96x96.png" sizes="96x96" />
+    <link rel="icon" type="image/svg+xml" href="/assets/favicons/favicon.svg" />
+    <link rel="shortcut icon" href="/assets/favicons/favicon.ico" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/assets/favicons/apple-touch-icon.png" />
+    <meta name="apple-mobile-web-app-title" content="Loom" />
+    <link rel="manifest" href="/assets/favicons/site.webmanifest" />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="../styles/loom-ui.css">
+    <link rel="stylesheet" href="../themes/default.css">
+    <link rel="stylesheet" href="../assets/css/docs.css">
+</head>
+
+<body class="docs-page">
+
+    <header id="topbar">
+        <div class="brand">
+            <svg class="brand-mark" width="22" height="22" viewBox="0 0 22 22" fill="none">
+                <circle cx="11" cy="11" r="9" stroke="currentColor" stroke-width="1.6" />
+                <circle cx="11" cy="11" r="2.4" fill="currentColor" />
+            </svg>
+            <span class="brand-name">Loom</span>
+            <span class="brand-sub">documentation</span>
+        </div>
+        <div class="topbar-center"></div>
+        <div class="topbar-right">
+            <a href="/" class="tbtn" style="text-decoration:none;">
+                <svg width="13" height="13" viewBox="0 0 13 13" fill="none" aria-hidden="true">
+                    <path d="M8 2L4 6.5 8 11" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
+                        stroke-linejoin="round" />
+                </svg>
+                <span>Back to App</span>
+            </a>
+        </div>
+    </header>
+
+    <div class="docs-layout">
+        <aside class="docs-sidebar" aria-label="Documentation navigation">
+            <nav class="docs-nav">
+                <span class="docs-nav-label">Reference</span>
+                <div class="docs-nav-section">
+                    <a href="../docs.html" class="docs-nav-link docs-nav-link--back">
+                        <span class="docs-nav-dot"></span>Main Docs
+                    </a>
+                    <a href="loom-markdown.html" class="docs-nav-link docs-nav-link--guide">
+                        <span class="docs-nav-dot"></span>Loom Markdown
+                    </a>
+                </div>
+            </nav>
+        </aside>
+
+        <main class="docs-content">
+            <section class="docs-section" id="loom-syntax">
+                <div class="docs-section-header">
+                    <div class="docs-section-icon">
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                            <path d="M5 2L1 6l4 4M11 2l4 4-4 4" stroke="currentColor" stroke-width="1.5"
+                                stroke-linecap="round" stroke-linejoin="round" />
+                        </svg>
+                    </div>
+                    <h2>Loom Syntax Highlighter</h2>
+                </div>
+
+                <p class="docs-section-intro">Loom includes a lightweight syntax highlighter designed specifically for
+                    <strong>Codeblock</strong> cards. It automatically detects the language and applies colour‑coded
+                    highlighting in real time.</p>
+
+                <h3>How it works</h3>
+                <p>The highlighter processes source code in a single pass, splitting it into tokens (keywords, strings,
+                    numbers, operators, etc.) and wrapping each token in <code>&lt;span&gt;</code> elements with CSS
+                    classes. The result is rendered directly in the Codeblock card preview and the full‑screen viewer.
+                </p>
+                <p>Language detection uses a heuristic: it scans for language‑specific keywords and patterns (e.g.,
+                    <code>def</code> for Python, <code>function</code>/arrow syntax for JavaScript, HTML tags, CSS rule
+                    blocks). The language with the highest score wins.</p>
+
+                <h3>Supported languages</h3>
+                <table class="docs-shortcut-table" style="max-width:600px;">
+                    <thead>
+                        <tr>
+                            <th>Language</th>
+                            <th>File extensions / context</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>JavaScript</strong> (JS)</td>
+                            <td><code>.js</code>, <code>.mjs</code>, <code>.cjs</code></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Python</strong> (PY)</td>
+                            <td><code>.py</code></td>
+                        </tr>
+                        <tr>
+                            <td><strong>HTML</strong></td>
+                            <td><code>.html</code>, <code>.htm</code></td>
+                        </tr>
+                        <tr>
+                            <td><strong>CSS</strong></td>
+                            <td><code>.css</code></td>
+                        </tr>
+                    </tbody>
+                </table>
+                <p>For HTML and CSS, Loom uses dedicated tokenizers that understand tags, attributes, CSS selectors,
+                    properties, and values.</p>
+
+                <h3>Token types & CSS classes</h3>
+                <p>Each token type is assigned a CSS class that you can customise via the theme. The default mapping is:
+                </p>
+                <table class="docs-shortcut-table" style="max-width:500px;">
+                    <thead>
+                        <tr>
+                            <th>Token</th>
+                            <th>CSS class</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Comment</td>
+                            <td><code>syn-comment</code></td>
+                        </tr>
+                        <tr>
+                            <td>String</td>
+                            <td><code>syn-string</code></td>
+                        </tr>
+                        <tr>
+                            <td>Number</td>
+                            <td><code>syn-number</code></td>
+                        </tr>
+                        <tr>
+                            <td>Boolean / null / undefined</td>
+                            <td><code>syn-boolean</code></td>
+                        </tr>
+                        <tr>
+                            <td>Keyword</td>
+                            <td><code>syn-keyword</code></td>
+                        </tr>
+                        <tr>
+                            <td>Built‑in function / object</td>
+                            <td><code>syn-builtin</code></td>
+                        </tr>
+                        <tr>
+                            <td>Function name</td>
+                            <td><code>syn-function</code></td>
+                        </tr>
+                        <tr>
+                            <td>Class name</td>
+                            <td><code>syn-class</code></td>
+                        </tr>
+                        <tr>
+                            <td>Operator</td>
+                            <td><code>syn-operator</code></td>
+                        </tr>
+                        <tr>
+                            <td>Regex literal (JS)</td>
+                            <td><code>syn-regex</code></td>
+                        </tr>
+                        <tr>
+                            <td>HTML tag</td>
+                            <td><code>syn-tag</code></td>
+                        </tr>
+                        <tr>
+                            <td>HTML attribute name</td>
+                            <td><code>syn-attr-name</code></td>
+                        </tr>
+                        <tr>
+                            <td>HTML attribute value</td>
+                            <td><code>syn-attr-value</code></td>
+                        </tr>
+                    </tbody>
+                </table>
+                <p>You can find these styles in the theme CSS file. They are applied automatically inside any
+                    <code>pre code</code> block that receives highlighted output.</p>
+
+                <h3>Using LoomSyntax in Codeblocks</h3>
+                <p>When you create a Codeblock card, the highlighter runs on the code you enter in the Inspector. The
+                    card body shows a preview with syntax colours. The language badge in the header (e.g., “JS · 42
+                    lines”) reflects the auto‑detected language.</p>
+                <p>There is no manual language selector — the highlighter decides based on content. If you need a
+                    specific language, include enough characteristic syntax (e.g., a <code>def</code> for Python, an
+                    HTML doctype or tags, CSS rule blocks).</p>
+
+                <h3>API (for developers)</h3>
+                <p>The highlighter is exposed as <code>window.LoomSyntax</code> with these methods:</p>
+                <ul>
+                    <li><code>LoomSyntax.highlight(code, lang?)</code> — returns HTML string with span‑wrapped tokens.
+                        If <code>lang</code> is omitted, auto‑detects.</li>
+                    <li><code>LoomSyntax.detectLanguage(code)</code> — returns <code>"js"</code>, <code>"py"</code>,
+                        <code>"html"</code>, or <code>"css"</code>.</li>
+                    <li><code>LoomSyntax.LANGUAGES</code> — object with language metadata (name, keywords, etc.).</li>
+                </ul>
+                <p>This API is used internally by the Codeblock card renderer and can also be called from the browser
+                    console for testing.</p>
+
+                <div class="docs-callout tip">
+                    <span class="docs-callout-icon">💡</span>
+                    <p>Want to change the colours? Override the <code>syn-*</code> classes in your custom theme. The
+                        default theme uses the app’s accent colour for keywords and a warm palette for strings and
+                        numbers.</p>
+                </div>
+            </section>
+        </main>
+    </div>
+</body>
+
+</html>
