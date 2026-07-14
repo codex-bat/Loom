@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en" class="docs-root">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+    <title>Markdown in Loom — Guide</title>
+
+    <link rel="icon" type="image/png" href="/assets/favicons/favicon-96x96.png" sizes="96x96" />
+    <link rel="icon" type="image/svg+xml" href="/assets/favicons/favicon.svg" />
+    <link rel="shortcut icon" href="/assets/favicons/favicon.ico" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/assets/favicons/apple-touch-icon.png" />
+    <meta name="apple-mobile-web-app-title" content="Loom" />
+    <link rel="manifest" href="/assets/favicons/site.webmanifest" />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="../styles/loom-ui.css">
+    <link rel="stylesheet" href="../themes/default.css">
+    <link rel="stylesheet" href="../assets/css/docs.css">
+</head>
+
+<body class="docs-page">
+
+    <header id="topbar">
+        <div class="brand">
+            <svg class="brand-mark" width="22" height="22" viewBox="0 0 22 22" fill="none">
+                <circle cx="11" cy="11" r="9" stroke="currentColor" stroke-width="1.6" />
+                <circle cx="11" cy="11" r="2.4" fill="currentColor" />
+            </svg>
+            <span class="brand-name">Loom</span>
+            <span class="brand-sub">documentation</span>
+        </div>
+        <div class="topbar-center"></div>
+        <div class="topbar-right">
+            <a href="/" class="tbtn" style="text-decoration:none;">
+                <svg width="13" height="13" viewBox="0 0 13 13" fill="none" aria-hidden="true">
+                    <path d="M8 2L4 6.5 8 11" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
+                        stroke-linejoin="round" />
+                </svg>
+                <span>Back to App</span>
+            </a>
+        </div>
+    </header>
+
+    <div class="docs-layout">
+        <aside class="docs-sidebar" aria-label="Documentation navigation">
+            <nav class="docs-nav">
+                <span class="docs-nav-label">Reference</span>
+                <div class="docs-nav-section">
+                    <a href="../docs.html" class="docs-nav-link docs-nav-link--back">
+                        <span class="docs-nav-dot"></span>Main Docs
+                    </a>
+                    <a href="loom-syntax.html" class="docs-nav-link docs-nav-link--guide">
+                        <span class="docs-nav-dot"></span>Loom Syntax
+                    </a>
+                </div>
+            </nav>
+        </aside>
+
+        <main class="docs-content">
+            <section class="docs-section" id="markdown">
+                <div class="docs-section-header">
+                    <div class="docs-section-icon">
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                            <path d="M2 4h12M2 8h12M2 12h8" stroke="currentColor" stroke-width="1.5"
+                                stroke-linecap="round" />
+                        </svg>
+                    </div>
+                    <h2>Loom Markdown</h2>
+                </div>
+
+                <p class="docs-section-intro">Loom includes a built‑in Markdown renderer that works in <strong>text
+                        blocks</strong>, <strong>card titles</strong>, and the <strong>Notes</strong> field. When you
+                    switch to View Mode (or enable per‑card preview), the raw Markdown is converted into formatted HTML.
+                </p>
+
+                <h3>Where Markdown is used</h3>
+                <ul>
+                    <li><strong>Text blocks</strong> inside standard Frame cards — write your script, notes, or
+                        descriptions in Markdown.</li>
+                    <li><strong>Card titles</strong> — the title field renders as Markdown in View Mode / preview.</li>
+                    <li><strong>Inspector Notes</strong> — the Notes textarea also renders Markdown in preview.</li>
+                </ul>
+                <p>Markdown is only visible when a card is in <em>preview</em> state (or when the whole board is in View
+                    Mode). In Edit Mode you see the raw source.</p>
+
+                <h3>Quick reference</h3>
+                <table class="docs-shortcut-table" style="max-width:700px;">
+                    <thead>
+                        <tr>
+                            <th style="width:40%">You write</th>
+                            <th>It becomes</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code># Heading 1</code></td>
+                            <td>Large heading</td>
+                        </tr>
+                        <tr>
+                            <td><code>## Heading 2</code> … <code>###### Heading 6</code></td>
+                            <td>Sub‑headings of decreasing size</td>
+                        </tr>
+                        <tr>
+                            <td><code>**bold**</code> or <code>__bold__</code></td>
+                            <td><strong>Bold text</strong></td>
+                        </tr>
+                        <tr>
+                            <td><code>*italic*</code> or <code>_italic_</code></td>
+                            <td><em>Italic text</em></td>
+                        </tr>
+                        <tr>
+                            <td><code>~~strikethrough~~</code></td>
+                            <td><del>Strikethrough</del></td>
+                        </tr>
+                        <tr>
+                            <td><code>[link text](https://example.com)</code></td>
+                            <td>Clickable link (opens in new tab)</td>
+                        </tr>
+                        <tr>
+                            <td><code>`inline code`</code></td>
+                            <td><code>monospaced text</code></td>
+                        </tr>
+                        <tr>
+                            <td><code>```<br>fenced code block<br>```</code></td>
+                            <td>Pre‑formatted block (language class added if you write <code>```js</code>)</td>
+                        </tr>
+                        <tr>
+                            <td><code>- unordered item</code><br><code>* alternative bullet</code><br><code>+ plus bullet</code>
+                            </td>
+                            <td>Unordered list</td>
+                        </tr>
+                        <tr>
+                            <td><code>1. first</code><br><code>2. second</code></td>
+                            <td>Ordered list</td>
+                        </tr>
+                        <tr>
+                            <td><code>&gt; blockquote</code></td>
+                            <td>Blockquote</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3>Advanced details</h3>
+                <ul>
+                    <li><strong>Line breaks:</strong> A single newline is preserved inside a paragraph
+                        (<code>&lt;br&gt;</code>). Two newlines create a new paragraph.</li>
+                    <li><strong>URL safety:</strong> Links are sanitised — only <code>http:</code>, <code>https:</code>,
+                        <code>mailto:</code>, and <code>tel:</code> protocols are allowed.</li>
+                    <li><strong>Code blocks:</strong> You can optionally specify a language after the opening backticks
+                        (e.g., <code>```python</code>) — it adds a CSS class but does not apply syntax highlighting
+                        (that is only done in Codeblock cards).</li>
+                    <li><strong>Escaping:</strong> To display a literal asterisk or underscore, use a backslash:
+                        <code>\*</code>.</li>
+                </ul>
+
+                <h3>Activating the preview</h3>
+                <p>Markdown rendering is activated automatically when you:</p>
+                <ul>
+                    <li>Switch the entire board to <strong>View Mode</strong> (dropdown in the top bar).</li>
+                    <li>Click the <strong>eye icon</strong> on a specific card header to toggle per‑card preview.</li>
+                    <li>Press <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>P</kbd> to toggle preview for all visible cards
+                        at once.</li>
+                </ul>
+                <p>While editing, you always see the raw Markdown source. The preview is a rendering overlay that hides
+                    the source fields.</p>
+
+                <div class="docs-callout tip">
+                    <span class="docs-callout-icon">✍️</span>
+                    <p>Write your scene notes, shot descriptions, or character dialogue in Markdown. When presenting or
+                        exporting, the content will look polished without any extra tools.</p>
+                </div>
+
+                <div class="docs-callout warning">
+                    <span class="docs-callout-icon">⚠️</span>
+                    <p>Markdown previews are session‑only and reset when you reload. To make formatting permanent in
+                        exports, use <strong>View Mode</strong> when exporting to PNG or sharing the <code>.json</code>
+                        file.</p>
+                </div>
+            </section>
+        </main>
+    </div>
+</body>
+
+</html>
